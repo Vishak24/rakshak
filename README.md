@@ -105,16 +105,40 @@ Women in urban areas like Chennai face uncertainty about safety when traveling t
 
 1. **Clone the repository**:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Vishak24/rakshak.git
 cd rakshak
 ```
 
-2. **Install dependencies**:
+2. **Set up Google Maps API Key**:
+
+   a. Get your API key from [Google Cloud Console](https://console.cloud.google.com/google/maps-apis)
+   
+   b. Enable these APIs:
+      - Maps SDK for Android
+      - Maps SDK for iOS
+      - Geocoding API
+   
+   c. Add your API key to the config files:
+   
+   **Android**: `android/app/src/main/AndroidManifest.xml`
+   ```xml
+   <meta-data
+       android:name="com.google.android.geo.API_KEY"
+       android:value="YOUR_ACTUAL_API_KEY_HERE"/>
+   ```
+   
+   **iOS**: `ios/Runner/Info.plist`
+   ```xml
+   <key>GMSApiKey</key>
+   <string>YOUR_ACTUAL_API_KEY_HERE</string>
+   ```
+
+3. **Install dependencies**:
 ```bash
 flutter pub get
 ```
 
-3. **Run Mobile App**:
+4. **Run Mobile App**:
 ```bash
 flutter run
 # Or for a specific device:

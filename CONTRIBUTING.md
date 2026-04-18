@@ -28,11 +28,19 @@ Rakshak is a production-ready Flutter application with:
 
 1. **Clone the repository**:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Vishak24/rakshak.git
 cd rakshak
 ```
 
-2. **Install Flutter dependencies**:
+2. **Set up Google Maps API Key**:
+   - Get your API key from [Google Cloud Console](https://console.cloud.google.com/google/maps-apis)
+   - Enable Maps SDK for Android, Maps SDK for iOS, and Geocoding API
+   - Add your key to:
+     - `android/app/src/main/AndroidManifest.xml` (replace `YOUR_GOOGLE_MAPS_API_KEY_HERE`)
+     - `ios/Runner/Info.plist` (replace `YOUR_GOOGLE_MAPS_API_KEY_HERE`)
+   - **Never commit your actual API key to the repository**
+
+3. **Install Flutter dependencies**:
 ```bash
 flutter pub get
 ```

@@ -70,3 +70,8 @@ node_modules/
 *~
 .DS_Store
 Thumbs.db
+
+# Environment variables (contains secrets)
+.env
+.env.local
+.env.*.local
