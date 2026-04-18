@@ -1,0 +1,18 @@
+{
+  "name": "rakshak_aws_final",
+  "version": "1.0.0",
+  "description": "A dual-interface Flutter application for real-time safety monitoring and risk assessment.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0"
+  }
+}
