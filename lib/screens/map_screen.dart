@@ -9,7 +9,11 @@ import '../services/api_service.dart';
 import '../services/location_service.dart';
 import 'sos_detail_screen.dart';
 import 'optimised_route_screen.dart';
-import 'monitor_screen.dart';
+
+// ── String helper ─────────────────────────────────────────────────────────────
+extension _StringX on String {
+  String ifEmpty(String fallback) => isEmpty ? fallback : this;
+}
 
 // ── Nominatim pincode boundary fetcher ───────────────────────────────────────
 // Fetches polygon boundaries from OSM Nominatim — no file assets needed.
@@ -548,10 +552,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     ],
                   ),
                   _buildAlertsTab(),
-                  const Center(
-                      child: Text('Patrol Management',
-                          style: TextStyle(color: Color(0xFF8b949e)))),
-                  const MonitorScreen(),
+                  _buildResponseTab(),
                 ],
               ),
             ),
@@ -564,13 +565,154 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   _navItem(0, Icons.map_outlined, 'MAP'),
                   _navItem(1, Icons.warning_amber_outlined, 'ALERTS',
                       badge: activeAlerts > 0 ? activeAlerts.toString() : null),
-                  _navItem(2, Icons.directions_car_outlined, 'PATROL'),
-                  _navItem(3, Icons.monitor_heart_outlined, 'MONITOR'),
+                  _navItem(2, Icons.bolt_outlined, 'RESPONSE'),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildResponseTab() {
+    // Derive current pincode from officer position (simplified lookup)
+    final currentPincode = _zoneRisk.keys.isNotEmpty ? _zoneRisk.keys.first : '600001';
+    final currentRisk    = _zoneRisk[currentPincode] ?? 'LOW';
+    final riskColor      = currentRisk == 'HIGH'
+        ? _red
+        : currentRisk == 'MEDIUM'
+            ? const Color(0xFFf59e0b)
+            : const Color(0xFF22c55e);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Current zone
+        _responseCard(
+          icon: Icons.location_on,
+          iconColor: _teal,
+          title: 'CURRENT ZONE',
+          value: currentPincode,
+          subtitle: 'Risk: $currentRisk',
+          subtitleColor: riskColor,
+        ),
+        const SizedBox(height: 12),
+
+        // Nearby high-risk zones
+        _responseCard(
+          icon: Icons.warning_amber_rounded,
+          iconColor: _red,
+          title: 'HIGH RISK NEARBY',
+          value: _zoneRisk.entries
+              .where((e) => e.value == 'HIGH')
+              .map((e) => e.key)
+              .take(3)
+              .join(', ')
+              .ifEmpty('None'),
+          subtitle: '${_zoneRisk.values.where((v) => v == 'HIGH').length} zones flagged',
+          subtitleColor: _textMut,
+        ),
+        const SizedBox(height: 12),
+
+        // Active SOS count
+        _responseCard(
+          icon: Icons.sos,
+          iconColor: _red,
+          title: 'ACTIVE SOS IN AREA',
+          value: _alerts.where((a) => a.status != 'resolved').length.toString(),
+          subtitle: _alerts.isEmpty ? 'No active alerts' : 'Tap Alerts tab to view',
+          subtitleColor: _textMut,
+        ),
+        const SizedBox(height: 12),
+
+        // Accepted SOS status
+        _responseCard(
+          icon: Icons.check_circle_outline,
+          iconColor: const Color(0xFF22c55e),
+          title: 'ACCEPTED SOS',
+          value: _alerts.where((a) => a.status == 'dispatched').length.toString(),
+          subtitle: 'Dispatched and en route',
+          subtitleColor: _textMut,
+        ),
+        const SizedBox(height: 20),
+
+        // Route button
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OptimisedRouteScreen(
+                  officerPos: _officerPos,
+                  alerts: _alerts,
+                ),
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _teal,
+              foregroundColor: const Color(0xFF00382e),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              elevation: 0,
+            ),
+            icon: const Icon(Icons.bolt, size: 18),
+            label: const Text(
+              'GET OPTIMISED ROUTE',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _responseCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String value,
+    required String subtitle,
+    required Color subtitleColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        color: _textMut, fontSize: 10,
+                        fontWeight: FontWeight.w700, letterSpacing: 1)),
+                const SizedBox(height: 2),
+                Text(value,
+                    style: const TextStyle(
+                        color: _textPri, fontSize: 18,
+                        fontWeight: FontWeight.w700)),
+                Text(subtitle,
+                    style: TextStyle(color: subtitleColor, fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
