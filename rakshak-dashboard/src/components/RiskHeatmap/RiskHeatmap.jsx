@@ -2,22 +2,13 @@ import React, { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import s from './RiskHeatmap.module.css'
 import { ZONES, riskColor } from '../../constants/zones'
-import { usePatrolSimulation } from '../../hooks/usePatrolSimulation'
+import { PATROL_ROUTES } from '../../data/patrolRoutes'
 
 const CHENNAI_CENTER = [13.0827, 80.2707]
 
-// ── Circle marker style per patrol status ────────────────────────────────────
-function getPatrolStyle(status) {
-  if (status === 'Responding') return { radius: 8, fillColor: '#ef4444', color: '#fff', weight: 2, fillOpacity: 1 }
-  if (status === 'AtScene')    return { radius: 8, fillColor: '#22c55e', color: '#fff', weight: 2, fillOpacity: 1 }
-  return                              { radius: 8, fillColor: '#3b82f6', color: '#fff', weight: 2, fillOpacity: 1 }
-}
-
-function tooltipHtml(patrol) {
-  const color = patrol.status === 'Patrolling' ? '#3b82f6'
-    : patrol.status === 'Responding' ? '#ef4444' : '#22c55e'
-  return `<b>${patrol.name}</b> (${patrol.vehicle})<br/>` +
-    `Status: <span style="color:${color};font-weight:700">${patrol.status}</span>`
+// Lerp between two waypoints
+function lerp(a, b, t) {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
 }
 
 function getRiskStyle(risk, hover) {
@@ -36,8 +27,7 @@ function getRiskStyle(risk, hover) {
  * Props:
  *   apiData        — Map<code, {riskLevel, riskIndex, confidence}>
  *   lang           — 'en' | 'ta'
- *   dispatchPatrol — (sosLocation) => unitName  (unused here, kept for API compat)
- *   onPatrolClick  — (patrolState) => void  — called when a patrol marker is clicked
+ *   onPatrolClick  — (patrolRoute) => void
  */
 export default function RiskHeatmap({ apiData, lang, onPatrolClick }) {
   const mapRef           = useRef(null)
@@ -45,16 +35,14 @@ export default function RiskHeatmap({ apiData, lang, onPatrolClick }) {
   const heatRef          = useRef(null)
   const circlesRef       = useRef([])
   const patrolLayerRef   = useRef(null)
-  // id → { marker, status }  — avoids recreating markers every 100ms tick
-  const patrolMarkersRef = useRef({})
-  // Stable ref to onPatrolClick so marker click closures never go stale
   const onPatrolClickRef = useRef(onPatrolClick)
   useEffect(() => { onPatrolClickRef.current = onPatrolClick }, [onPatrolClick])
 
-  const [selected, setSelected] = useState(null)
+  // Animation state stored in ref — avoids React re-render on every tick
+  // animState[i] = { marker, stepIdx, progress }
+  const animStateRef = useRef([])
 
-  // ── Patrol simulation (100ms ticks) ──────────────────────────────────────
-  const { patrolStates } = usePatrolSimulation()
+  const [selected, setSelected] = useState(null)
 
   // ── Init map once ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -80,83 +68,81 @@ export default function RiskHeatmap({ apiData, lang, onPatrolClick }) {
       }).addTo(map)
     }
 
-    // KML zones
-    fetch('/Final_Chennai_Pincode.kml')
-      .then(r => { if (!r.ok) throw new Error('no kml'); return r.text() })
-      .then(kmlText => renderKML(map, kmlText))
+    // Zone polygons
+    fetch('/chennai-zones-fixed.geojson')
+      .then(r => { if (!r.ok) throw new Error('no geojson'); return r.json() })
+      .then(gj => renderGeoJSON(map, gj))
       .catch(() => renderCircles(map))
 
-    // Patrol layer — markers created/updated in separate effect
+    // Patrol layer
     patrolLayerRef.current = L.layerGroup().addTo(map)
+
+    // Create 12 patrol markers — one per PATROL_ROUTES entry
+    animStateRef.current = PATROL_ROUTES.map((route, i) => {
+      const startPt = route.waypoints[0]
+      const marker = L.circleMarker(startPt, {
+        radius: 7, fillColor: '#00e5ff', color: '#fff', weight: 2, fillOpacity: 0.9,
+      })
+      marker.bindTooltip(
+        `<b>${route.name}</b><br/>${route.zone}<br/><span style="color:#00e5ff;font-weight:700">Patrolling</span>`,
+        { permanent: false, direction: 'top', offset: [0, -10], className: 'patrol-tooltip' }
+      )
+      marker.on('click', () => onPatrolClickRef.current?.(route))
+      patrolLayerRef.current.addLayer(marker)
+      // Stagger start positions so patrols don't all move in sync
+      return { marker, stepIdx: 0, progress: (i / PATROL_ROUTES.length) }
+    })
 
     return () => {
       map.remove()
       mapInstance.current = null
-      patrolMarkersRef.current = {}
+      animStateRef.current = []
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Smooth patrol marker updates — called every 100ms ────────────────────
+  // ── Smooth lerp animation — 3000ms tick, advance by 0.05 per tick ─────────
   useEffect(() => {
-    const layer = patrolLayerRef.current
-    if (!layer || !mapInstance.current) return
+    const TICK_MS   = 3000
+    const STEP_SIZE = 0.05
 
-    patrolStates.forEach(patrol => {
-      const latlng = [patrol.position.lat, patrol.position.lng]
-      const entry  = patrolMarkersRef.current[patrol.id]
+    const timer = setInterval(() => {
+      animStateRef.current.forEach((state, i) => {
+        const route = PATROL_ROUTES[i]
+        const wpts  = route.waypoints
+        const n     = wpts.length
 
-      if (entry) {
-        // Always update position (smooth motion)
-        entry.marker.setLatLng(latlng)
+        state.progress += STEP_SIZE
 
-        // Only update style + tooltip when status changes (avoids DOM churn)
-        if (entry.status !== patrol.status) {
-          entry.marker.setStyle(getPatrolStyle(patrol.status))
-          entry.marker.unbindTooltip()
-          entry.marker.bindTooltip(tooltipHtml(patrol), {
-            permanent: false, direction: 'top', offset: [0, -10], className: 'patrol-tooltip',
-          })
-          entry.status = patrol.status
+        if (state.progress >= 1.0) {
+          // Advance to next waypoint segment, reset progress
+          state.stepIdx = (state.stepIdx + 1) % n
+          state.progress = 0
         }
-      } else {
-        // First time — create circle marker
-        const marker = L.circleMarker(latlng, getPatrolStyle(patrol.status))
-        marker.bindTooltip(tooltipHtml(patrol), {
-          permanent: false, direction: 'top', offset: [0, -10], className: 'patrol-tooltip',
-        })
-        // Click → open detail panel via stable ref
-        marker.on('click', () => onPatrolClickRef.current?.(patrol))
-        layer.addLayer(marker)
-        patrolMarkersRef.current[patrol.id] = { marker, status: patrol.status }
-      }
-    })
 
-    // Keep click handler data fresh — update patrol data on marker without recreating
-    // (the ref closure already reads the latest patrol via the forEach above)
-  }, [patrolStates])
+        const nextIdx = (state.stepIdx + 1) % n
+        const pos = lerp(wpts[state.stepIdx], wpts[nextIdx], state.progress)
+        state.marker.setLatLng(pos)
+      })
+    }, TICK_MS)
 
-  // ── KML renderer ──────────────────────────────────────────────────────────
-  function renderKML(map, kmlText) {
-    const parser = new DOMParser()
-    const kml    = parser.parseFromString(kmlText, 'text/xml')
+    return () => clearInterval(timer)
+  }, [])
+
+  // ── GeoJSON renderer ──────────────────────────────────────────────────────
+  function renderGeoJSON(map, gj) {
     const group  = L.layerGroup().addTo(map)
+    const fills   = { HIGH: 0.20, MEDIUM: 0.15, LOW: 0.10 }
+    const weights = { HIGH: 1.5,  MEDIUM: 1.0,  LOW: 0.8  }
 
-    Array.from(kml.querySelectorAll('Placemark')).forEach(pm => {
-      const coordsEl = pm.querySelector('coordinates')
-      if (!coordsEl) return
-      const latLngs = coordsEl.textContent.trim().split(/\s+/)
-        .filter(c => c.includes(','))
-        .map(c => { const p = c.split(','); return [parseFloat(p[1]), parseFloat(p[0])] })
-        .filter(ll => !isNaN(ll[0]) && !isNaN(ll[1]))
-      if (latLngs.length < 3) return
-
-      const sd      = [...pm.querySelectorAll('SimpleData')].find(el => el.getAttribute('name') === 'Pincode')
-      const pincode = sd?.textContent?.trim() || pm.querySelector('name')?.textContent?.trim() || ''
+    ;(gj.features || []).forEach(feature => {
+      const pincode = feature.properties?.pincode || ''
       const zone    = ZONES.find(z => z.c === pincode)
       const risk    = zone?.r || 'LOW'
       const col     = riskColor(risk)
-      const fills   = { HIGH: 0.20, MEDIUM: 0.15, LOW: 0.10 }
-      const weights = { HIGH: 1.5,  MEDIUM: 1.0,  LOW: 0.8  }
+
+      const rings = feature.geometry?.coordinates || []
+      const latLngs = (rings[0] || []).map(([lng, lat]) => [lat, lng])
+      if (latLngs.length < 3) return
 
       const poly = L.polygon(latLngs, {
         color: col, weight: weights[risk], opacity: 0.8,
@@ -231,10 +217,8 @@ export default function RiskHeatmap({ apiData, lang, onPatrolClick }) {
         <div className={s.legRow}><div className={s.legDot} style={{background:'#FF3B5C'}}/><span>{lang === 'ta' ? 'அதிக ஆபத்து' : 'High Risk'}</span></div>
         <div className={s.legRow}><div className={s.legDot} style={{background:'#F59E0B'}}/><span>{lang === 'ta' ? 'நடுத்தர ஆபத்து' : 'Medium Risk'}</span></div>
         <div className={s.legRow}><div className={s.legDot} style={{background:'#22C55E'}}/><span>{lang === 'ta' ? 'குறைந்த ஆபத்து' : 'Low Risk'}</span></div>
-        <div className={s.legLbl} style={{marginTop:8}}>PATROL STATUS</div>
-        <div className={s.legRow}><div className={s.legDot} style={{background:'#3b82f6'}}/><span>Patrolling</span></div>
-        <div className={s.legRow}><div className={s.legDot} style={{background:'#ef4444'}}/><span>Responding</span></div>
-        <div className={s.legRow}><div className={s.legDot} style={{background:'#22c55e'}}/><span>At Scene</span></div>
+        <div className={s.legLbl} style={{marginTop:8}}>PATROLS ({PATROL_ROUTES.length})</div>
+        <div className={s.legRow}><div className={s.legDot} style={{background:'#00e5ff'}}/><span>On Duty</span></div>
       </div>
 
       {selected && (
