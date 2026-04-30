@@ -143,9 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Badge field
+                    // Username field
                     const Text(
-                      'BADGE NUMBER',
+                      'USERNAME',
                       style: TextStyle(
                         color: _textMut,
                         fontSize: 11,
@@ -157,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     _buildInput(
                       controller: _badgeCtrl,
                       hint: 'TN-XXXX-XXXX',
-                      icon: Icons.badge_outlined,
+                      icon: Icons.person_outline,
                       obscure: false,
                     ),
                     const SizedBox(height: 20),

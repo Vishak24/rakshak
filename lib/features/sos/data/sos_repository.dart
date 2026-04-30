@@ -1,45 +1,63 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import '../../../config/api.dart' as api;
 import '../../../core/constants/stub_data.dart';
 import '../domain/sos_service.dart';
 
-/// Live SOS repository — POSTs to /sos/live with real GPS, falls back to stub.
+/// Live SOS repository — POSTs to /sos/live with real GPS, falls back gracefully.
 class SosRepository implements SosService {
   bool _sosActive = false;
   String? _activeSosId;
 
-  @override
-  Future<bool> triggerSos({int? pincode}) async {
-    double lat = 13.0827;
-    double lng  = 80.2707;
+  /// Try to get GPS coordinates within 5 seconds.
+  /// Returns null if permission denied, timed out, or on web.
+  /// Never throws — SOS must never be blocked by location failure.
+  Future<({double lat, double lng})?> _getLocation() async {
+    if (kIsWeb) return null; // Geolocator GPS not reliable on web
 
     try {
       var perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
       }
-      if (perm != LocationPermission.deniedForever &&
-          perm != LocationPermission.denied) {
-        final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        ).timeout(const Duration(seconds: 8));
-        lat = pos.latitude;
-        lng = pos.longitude;
+      if (perm == LocationPermission.deniedForever ||
+          perm == LocationPermission.denied) {
+        return null;
       }
-    } catch (_) {}
+
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      ).timeout(const Duration(seconds: 5));
+
+      return (lat: pos.latitude, lng: pos.longitude);
+    } catch (_) {
+      return null; // timeout or any error — proceed without coordinates
+    }
+  }
+
+  @override
+  Future<bool> triggerSos({int? pincode}) async {
+    // Get GPS — null if unavailable (never blocks SOS)
+    final coords = await _getLocation();
 
     try {
       final body = <String, dynamic>{
-        'latitude':   lat,
-        'longitude':  lng,
+        'lat':       coords?.lat,   // null if location unavailable
+        'lng':       coords?.lng,
+        'latitude':  coords?.lat,   // also send legacy field names for backend compat
+        'longitude': coords?.lng,
         'risk_level': 'HIGH',
         'status':     'active',
+        'timestamp':  DateTime.now().toIso8601String(),
       };
-      // Include judge-mode pincode if provided so police app and dashboard
-      // show the correct zone for this SOS.
-      if (pincode != null) body['pincode'] = pincode.toString();
+
+      // Include pincode (from Judge Mode or sentinel GPS-derived value)
+      if (pincode != null) {
+        body['pincode']    = pincode.toString();
+        body['zone_name']  = pincode.toString(); // backend sets zone_name = pincode
+      }
 
       final res = await http
           .post(
@@ -52,14 +70,14 @@ class SosRepository implements SosService {
       if (res.statusCode == 200 || res.statusCode == 201) {
         _sosActive = true;
         try {
-          final body = jsonDecode(res.body) as Map<String, dynamic>;
-          _activeSosId = body['sos_id']?.toString();
+          final resp = jsonDecode(res.body) as Map<String, dynamic>;
+          _activeSosId = resp['sos_id']?.toString();
         } catch (_) {}
         return true;
       }
     } catch (_) {}
 
-    // Fallback: mark active locally so the UI proceeds
+    // Fallback: mark active locally so the UI proceeds even if network fails
     _sosActive = true;
     return true;
   }

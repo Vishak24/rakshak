@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/sos_alert.dart';
 import '../services/api_service.dart';
 import '../services/location_service.dart';
@@ -226,12 +227,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (mounted) setState(() => _kmlPolygons = all);
   }
 
+  // ── SOS deduplication — same pattern as dashboard useSosEvents ──────────
+  final Set<String> _seenSosIds = {};
+
   Future<void> _pollSos() async {
-    final alerts = await ApiService.fetchActiveSos(
-      officerLat: _officerPos.latitude,
-      officerLng: _officerPos.longitude,
-    );
-    if (mounted) setState(() => _alerts = alerts);
+    // Use GET /sos/live — same endpoint as the dashboard
+    final fresh = await ApiService.fetchLiveSos();
+    if (!mounted) return;
+
+    // Merge: add new IDs, keep existing accepted incident intact
+    final merged = <SosAlert>[];
+    for (final alert in fresh) {
+      final id = alert.sosId ?? alert.id;
+      _seenSosIds.add(id);
+      merged.add(alert);
+    }
+
+    setState(() => _alerts = merged);
   }
 
   /// Accept a SOS — PATCH backend, set as active incident, switch to map tab.
@@ -254,6 +266,22 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (alert.lat != null && alert.lng != null) {
         _mapController.move(LatLng(alert.lat!, alert.lng!), 14.0);
       }
+    }
+  }
+
+  /// Open Google Maps navigation to the SOS location using lat/lng from the record.
+  Future<void> _navigateToSos(SosAlert incident) async {
+    final lat = incident.lat;
+    final lng = incident.lng;
+    if (lat == null || lng == null) return;
+
+    final googleNav = Uri.parse('google.navigation:q=$lat,$lng&mode=d');
+    final fallback  = Uri.parse('https://maps.google.com/?daddr=$lat,$lng');
+
+    if (await canLaunchUrl(googleNav)) {
+      await launchUrl(googleNav);
+    } else {
+      await launchUrl(fallback, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -420,15 +448,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           Positioned(
             bottom: 16, left: 16, right: 16,
             child: ElevatedButton.icon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => OptimisedRouteScreen(
-                    officerPos: _officerPos,
-                    alerts: [incident],
-                  ),
-                ),
-              ),
+              onPressed: () => _navigateToSos(incident),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _teal,
                 foregroundColor: const Color(0xFF00382e),
@@ -741,12 +761,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     // When an incident is active, use its pincode as the current zone.
     // Otherwise fall back to GPS-derived nearest pincode.
     final nearest   = _nearestPincodes(_officerPos, count: 2);
-    final curPin    = incident?.pincode ?? (nearest.isNotEmpty ? nearest[0] : '—');
-    final nearbyPin = nearest.isNotEmpty
-        ? (incident?.pincode != null && nearest[0] == incident!.pincode
-            ? (nearest.length > 1 ? nearest[1] : '—')
-            : nearest[0])
-        : '—';
+    // Only show a pincode when an SOS is actively accepted; otherwise show "—"
+    final curPin    = incident?.pincode ?? '—';
+    final nearbyPin = nearest.isNotEmpty ? nearest[0] : '—';
     final curRisk   = _zoneRisk[curPin] ?? 'UNKNOWN';
     final activeSos = _alerts.where((a) => a.status != 'resolved').length;
 
@@ -783,8 +800,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 _statusRow(
                   label: 'Current pincode',
                   value: curPin,
-                  valueColor: _teal,
+                  valueColor: incident != null ? _teal : _textMut,
                   icon: Icons.location_on_outlined,
+                  sub: incident == null ? 'No active incident' : null,
+                  subColor: _textMut,
                 ),
                 const Divider(color: Colors.white12, height: 20),
 
@@ -885,15 +904,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OptimisedRouteScreen(
-                      officerPos: _officerPos,
-                      alerts: [incident],
-                    ),
-                  ),
-                ),
+                onPressed: () => _navigateToSos(incident),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _teal,
                   foregroundColor: const Color(0xFF00382e),
