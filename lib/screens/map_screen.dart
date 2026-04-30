@@ -607,6 +607,63 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   fontSize: 12, fontWeight: FontWeight.w700)),
                         ),
                 ),
+
+                // ── Cancelled SOS banner — shows phone for follow-up ──
+                if (a.status == 'cancelled')
+                  Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.12),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.warning_amber, color: Colors.amber, size: 16),
+                            SizedBox(width: 6),
+                            Text('SOS Cancelled by user',
+                                style: TextStyle(
+                                    color: Colors.amber,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12)),
+                          ],
+                        ),
+                        if (a.userPhone != null) ...[
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse('tel:${a.userPhone}'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.phone,
+                                    color: Colors.greenAccent, size: 14),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Call to verify: ${a.userPhone}',
+                                  style: const TextStyle(
+                                    color: Colors.greenAccent,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: Colors.greenAccent,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 4),
+                          const Text('No phone number on record.',
+                              style: TextStyle(color: Colors.amber, fontSize: 11)),
+                        ],
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
