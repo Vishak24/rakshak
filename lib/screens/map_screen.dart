@@ -264,19 +264,20 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   /// Open Google Maps navigation to the SOS location using lat/lng from the record.
+  /// Falls back to pincode search if coordinates are unavailable.
   Future<void> _navigateToSos(SosAlert incident) async {
     final lat = incident.lat;
     final lng = incident.lng;
-    if (lat == null || lng == null) return;
-
-    final googleNav = Uri.parse('google.navigation:q=$lat,$lng&mode=d');
-    final fallback  = Uri.parse('https://maps.google.com/?daddr=$lat,$lng');
-
-    if (await canLaunchUrl(googleNav)) {
-      await launchUrl(googleNav);
+    Uri uri;
+    if (lat != null && lng != null) {
+      uri = Uri.parse(
+          'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
     } else {
-      await launchUrl(fallback, mode: LaunchMode.externalApplication);
+      final pincode = incident.pincode ?? '';
+      uri = Uri.parse(
+          'https://www.google.com/maps/search/${Uri.encodeComponent('$pincode Chennai India')}');
     }
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
