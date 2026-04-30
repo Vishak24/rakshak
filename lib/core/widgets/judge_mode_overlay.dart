@@ -9,7 +9,6 @@ import 'rk_button.dart';
 import '../../features/intelligence/presentation/intelligence_controller.dart';
 import '../../features/sentinel/presentation/sentinel_controller.dart';
 import '../../core/models/risk_prediction_request.dart';
-import '../../core/constants/pincode_map.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 
@@ -30,50 +29,50 @@ const double _kPanelWidth = 260.0;
 // ── Dropdown items — built once at compile time ───────────────────────────────
 
 const _kPincodeItems = <DropdownMenuItem<int>>[
-  DropdownMenuItem(value: 600001, child: Text('600001 · Parrys Corner')),
+  DropdownMenuItem(value: 600001, child: Text('600001 · Park Town')),
   DropdownMenuItem(value: 600002, child: Text('600002 · Sowcarpet')),
-  DropdownMenuItem(value: 600003, child: Text('600003 · Park Town')),
-  DropdownMenuItem(value: 600004, child: Text('600004 · Mylapore')),
-  DropdownMenuItem(value: 600005, child: Text('600005 · Chintadripet')),
-  DropdownMenuItem(value: 600006, child: Text('600006 · Chepauk')),
-  DropdownMenuItem(value: 600007, child: Text('600007 · Perambur')),
-  DropdownMenuItem(value: 600008, child: Text('600008 · Chepauk')),
+  DropdownMenuItem(value: 600003, child: Text('600003 · Royapuram')),
+  DropdownMenuItem(value: 600004, child: Text('600004 · Chintadripet')),
+  DropdownMenuItem(value: 600005, child: Text('600005 · Royapettah')),
+  DropdownMenuItem(value: 600006, child: Text('600006 · Triplicane')),
+  DropdownMenuItem(value: 600007, child: Text('600007 · Egmore')),
+  DropdownMenuItem(value: 600008, child: Text('600008 · Nungambakkam')),
   DropdownMenuItem(value: 600009, child: Text('600009 · Kilpauk')),
-  DropdownMenuItem(value: 600010, child: Text('600010 · Vepery')),
-  DropdownMenuItem(value: 600011, child: Text('600011 · Royapuram')),
-  DropdownMenuItem(value: 600012, child: Text('600012 · Tondiarpet')),
+  DropdownMenuItem(value: 600010, child: Text('600010 · Aminjikarai')),
+  DropdownMenuItem(value: 600011, child: Text('600011 · Kodambakkam')),
+  DropdownMenuItem(value: 600012, child: Text('600012 · Ashok Nagar')),
   DropdownMenuItem(value: 600013, child: Text('600013 · Tiruvottiyur')),
-  DropdownMenuItem(value: 600015, child: Text('600015 · Padi')),
+  DropdownMenuItem(value: 600015, child: Text('600015 · Pattabiram')),
   DropdownMenuItem(value: 600017, child: Text('600017 · T. Nagar')),
-  DropdownMenuItem(value: 600018, child: Text('600018 · Kodambakkam')),
-  DropdownMenuItem(value: 600019, child: Text('600019 · Ennore')),
-  DropdownMenuItem(value: 600020, child: Text('600020 · Anna Nagar')),
-  DropdownMenuItem(value: 600024, child: Text('600024 · Ashok Nagar')),
-  DropdownMenuItem(value: 600028, child: Text('600028 · Nungambakkam')),
-  DropdownMenuItem(value: 600029, child: Text('600029 · Aminjikarai')),
-  DropdownMenuItem(value: 600032, child: Text('600032 · Vadapalani')),
-  DropdownMenuItem(value: 600033, child: Text('600033 · Saidapet')),
-  DropdownMenuItem(value: 600034, child: Text('600034 · Teynampet')),
-  DropdownMenuItem(value: 600035, child: Text('600035 · Alandur')),
-  DropdownMenuItem(value: 600036, child: Text('600036 · St. Thomas Mount')),
-  DropdownMenuItem(value: 600040, child: Text('600040 · Virugambakkam')),
-  DropdownMenuItem(value: 600042, child: Text('600042 · Thiruvanmiyur')),
-  DropdownMenuItem(value: 600044, child: Text('600044 · Tambaram')),
-  DropdownMenuItem(value: 600045, child: Text('600045 · Pallavaram')),
-  DropdownMenuItem(value: 600050, child: Text('600050 · Arumbakkam')),
-  DropdownMenuItem(value: 600053, child: Text('600053 · Ambattur')),
-  DropdownMenuItem(value: 600056, child: Text('600056 · Porur')),
-  DropdownMenuItem(value: 600058, child: Text('600058 · Washermanpet')),
-  DropdownMenuItem(value: 600061, child: Text('600061 · Chromepet')),
-  DropdownMenuItem(value: 600064, child: Text('600064 · Vandalur')),
-  DropdownMenuItem(value: 600078, child: Text('600078 · Valasaravakkam')),
+  DropdownMenuItem(value: 600018, child: Text('600018 · Abiramapuram')),
+  DropdownMenuItem(value: 600019, child: Text('600019 · Vyasarpadi')),
+  DropdownMenuItem(value: 600020, child: Text('600020 · Saidapet')),
+  DropdownMenuItem(value: 600024, child: Text('600024 · Pallavaram')),
+  DropdownMenuItem(value: 600028, child: Text('600028 · Adyar')),
+  DropdownMenuItem(value: 600029, child: Text('600029 · Besant Nagar')),
+  DropdownMenuItem(value: 600032, child: Text('600032 · Alwarpet')),
+  DropdownMenuItem(value: 600033, child: Text('600033 · Valasaravakkam')),
+  DropdownMenuItem(value: 600034, child: Text('600034 · Anna Nagar West')),
+  DropdownMenuItem(value: 600035, child: Text('600035 · Anna Nagar East')),
+  DropdownMenuItem(value: 600036, child: Text('600036 · Arumbakkam')),
+  DropdownMenuItem(value: 600040, child: Text('600040 · Nanganallur')),
+  DropdownMenuItem(value: 600042, child: Text('600042 · Velachery')),
+  DropdownMenuItem(value: 600044, child: Text('600044 · Perungudi')),
+  DropdownMenuItem(value: 600045, child: Text('600045 · Thoraipakkam')),
+  DropdownMenuItem(value: 600050, child: Text('600050 · Mogappair')),
+  DropdownMenuItem(value: 600053, child: Text('600053 · Villivakkam')),
+  DropdownMenuItem(value: 600056, child: Text('600056 · Kolathur')),
+  DropdownMenuItem(value: 600058, child: Text('600058 · Royapuram')),
+  DropdownMenuItem(value: 600061, child: Text('600061 · Mugalivakkam')),
+  DropdownMenuItem(value: 600064, child: Text('600064 · Medavakkam')),
+  DropdownMenuItem(value: 600078, child: Text('600078 · Ambattur')),
   DropdownMenuItem(value: 600081, child: Text('600081 · Manali')),
-  DropdownMenuItem(value: 600082, child: Text('600082 · Madhavaram')),
-  DropdownMenuItem(value: 600083, child: Text('600083 · Villivakkam')),
+  DropdownMenuItem(value: 600082, child: Text('600082 · Puzhal')),
+  DropdownMenuItem(value: 600083, child: Text('600083 · Madhavaram')),
   DropdownMenuItem(value: 600090, child: Text('600090 · Velachery')),
   DropdownMenuItem(value: 600096, child: Text('600096 · OMR')),
-  DropdownMenuItem(value: 600099, child: Text('600099 · Poonamallee')),
-  DropdownMenuItem(value: 600118, child: Text('600118 · Kathivakkam')),
+  DropdownMenuItem(value: 600099, child: Text('600099 · Kundrathur')),
+  DropdownMenuItem(value: 600118, child: Text('600118 · Perumbakkam')),
 ];
 
 // ── Overlay ───────────────────────────────────────────────────────────────────
@@ -81,18 +80,47 @@ const _kPincodeItems = <DropdownMenuItem<int>>[
 /// Wraps any screen. Renders a persistent teal pull-tab on the right edge
 /// and a slide-in Judge Mode panel.
 /// No BackdropFilter — avoids blur/compositing errors.
-class JudgeModeOverlay extends ConsumerWidget {
+class JudgeModeOverlay extends ConsumerStatefulWidget {
   final Widget child;
   const JudgeModeOverlay({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<JudgeModeOverlay> createState() => _JudgeModeOverlayState();
+}
+
+class _JudgeModeOverlayState extends ConsumerState<JudgeModeOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseCtrl;
+  late Animation<double> _pulseAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.55, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isOpen = ref.watch(judgePanelOpenProvider);
+    final activePin = ref.watch(judgePincodeProvider);
+    final topPad = MediaQuery.of(context).padding.top;
 
     return Stack(
       children: [
         // ── App content ────────────────────────────────────────────────
-        child,
+        widget.child,
 
         // ── Scrim — tap outside to close ───────────────────────────────
         if (isOpen)
@@ -105,35 +133,86 @@ class JudgeModeOverlay extends ConsumerWidget {
             ),
           ),
 
+        // ── SIMULATION MODE badge — shown when a pincode is active ─────
+        if (activePin != null)
+          Positioned(
+            right: isOpen ? _kPanelWidth + 6 : 28,
+            top: topPad + 8,
+            child: IgnorePointer(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.accentBright.withValues(alpha: 0.12),
+                  border: Border.all(
+                      color: AppColors.accentBright.withValues(alpha: 0.7)),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: Text(
+                  'SIMULATION MODE',
+                  style: AppText.labelSmallCaps.copyWith(
+                    color: AppColors.accentBright,
+                    fontSize: 8,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
         // ── Pull-tab ───────────────────────────────────────────────────
         Positioned(
           right: isOpen ? _kPanelWidth : 0,
-          top: 0,
+          top: topPad,
           bottom: 0,
           child: Center(
-            child: GestureDetector(
-              onTap: () =>
-                  ref.read(judgePanelOpenProvider.notifier).state = !isOpen,
-              child: Container(
-                width: 22,
-                height: 64,
-                decoration: const BoxDecoration(
-                  color: AppColors.accentBright,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(AppSpacing.radiusMd),
-                    bottomLeft: Radius.circular(AppSpacing.radiusMd),
-                  ),
-                ),
-                child: Center(
-                  child: RotatedBox(
-                    quarterTurns: 1,
-                    child: Text(
-                      'JM',
-                      style: AppText.labelSmallCaps.copyWith(
-                        color: AppColors.accentDark,
-                        fontSize: 9,
-                        letterSpacing: 1.5,
+            child: Tooltip(
+              message: 'Drag to simulate pincode',
+              child: GestureDetector(
+                onTap: () =>
+                    ref.read(judgePanelOpenProvider.notifier).state = !isOpen,
+                onHorizontalDragUpdate: (details) {
+                  if (details.delta.dx < -4) {
+                    ref.read(judgePanelOpenProvider.notifier).state = true;
+                  } else if (details.delta.dx > 4) {
+                    ref.read(judgePanelOpenProvider.notifier).state = false;
+                  }
+                },
+                child: AnimatedBuilder(
+                  animation: _pulseAnim,
+                  builder: (context, child) =>
+                      Opacity(opacity: _pulseAnim.value, child: child),
+                  child: Container(
+                    width: 22,
+                    height: 76,
+                    decoration: const BoxDecoration(
+                      color: AppColors.accentBright,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(AppSpacing.radiusMd),
+                        bottomLeft: Radius.circular(AppSpacing.radiusMd),
                       ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.drag_handle,
+                          color: AppColors.accentDark,
+                          size: 13,
+                        ),
+                        const SizedBox(height: 5),
+                        RotatedBox(
+                          quarterTurns: 1,
+                          child: Text(
+                            'JM',
+                            style: AppText.labelSmallCaps.copyWith(
+                              color: AppColors.accentDark,
+                              fontSize: 9,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -167,8 +246,8 @@ class _JudgePanel extends ConsumerStatefulWidget {
 }
 
 class _JudgePanelState extends ConsumerState<_JudgePanel> {
-  // Selected pincode from the dropdown — null means nothing chosen yet
-  int? _selectedPincode;
+  // Default to T. Nagar for judge mode demos; user can change via dropdown
+  int? _selectedPincode = 600017;
   bool _isSimulating = false;
 
   Future<void> _simulate(BuildContext context) async {
@@ -332,7 +411,7 @@ class _JudgePanelState extends ConsumerState<_JudgePanel> {
 
                     // ── Pincode dropdown ───────────────────────────────
                     DropdownButtonFormField<int>(
-                      value: _selectedPincode,
+                      initialValue: _selectedPincode,
                       dropdownColor: const Color(0xFF0D1B2A),
                       iconEnabledColor: AppColors.accentBright,
                       style: GoogleFonts.inter(

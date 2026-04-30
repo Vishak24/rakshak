@@ -7,7 +7,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/rk_label.dart';
-import '../../../core/widgets/rk_status_chip.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'intelligence_controller.dart';
 

@@ -8,12 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/sos_alert.dart';
 import '../services/api_service.dart';
 import '../services/location_service.dart';
-import 'optimised_route_screen.dart';
-
-// ── String helper ─────────────────────────────────────────────────────────────
-extension _StringX on String {
-  String ifEmpty(String fallback) => isEmpty ? fallback : this;
-}
 
 // ── Nominatim pincode boundary fetcher ───────────────────────────────────────
 // Fetches polygon boundaries from OSM Nominatim — no file assets needed.
