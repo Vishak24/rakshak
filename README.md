@@ -325,3 +325,9 @@ Developed for educational and hackathon purposes.
 ---
 
 **Built with Flutter 💙 | Powered by AWS Lambda 🚀 | Trained with XGBoost 🤖**
+
+
+> ⚠️ Backend endpoints are currently paused to avoid 
+> cloud costs. The full architecture, source code, and 
+> demo screenshots are available in this repository.
+> Contact me to arrange a live demo.
