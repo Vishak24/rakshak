@@ -1,4 +1,6 @@
-"""Task 2: Create 4 Lambda functions with inline code + explicit credentials env vars"""
+"""Task 2: Create/update 4 Lambda functions (score-refresh, reports, SOS, patrols).
+Rakshak 2.0: AI layer is Gemma 4 (gemma_api.py). SageMaker endpoint is legacy; score-refresh
+falls back to per-zone baseline scores when /predict is unavailable."""
 import boto3, io, zipfile, json, os
 from botocore.exceptions import ClientError
 
@@ -481,7 +483,7 @@ def create_or_update_lambda(name, code, description):
 
 
 arns = {}
-arns['rakshak-score-refresh']   = create_or_update_lambda('rakshak-score-refresh',   SCORE_REFRESH_CODE, 'Refresh zone risk scores via SageMaker')
+arns['rakshak-score-refresh']   = create_or_update_lambda('rakshak-score-refresh',   SCORE_REFRESH_CODE, 'Refresh zone risk scores; falls back to per-zone baselines when /predict unavailable')
 arns['rakshak-reports-handler'] = create_or_update_lambda('rakshak-reports-handler', REPORTS_CODE,       'CRUD for incident reports')
 arns['rakshak-sos-handler']     = create_or_update_lambda('rakshak-sos-handler',     SOS_CODE,           'SOS alert management')
 arns['rakshak-patrol-handler']  = create_or_update_lambda('rakshak-patrol-handler',  PATROL_CODE,        'Patrol unit management')

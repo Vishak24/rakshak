@@ -25,7 +25,7 @@ export default function GemmaPanel({ selectedZone, patrolCount }) {
     })
       .then(r => r.json())
       .then(d => setExplanation(d.explanation ?? ''))
-      .catch(() => setExplanation('Unable to reach Gemma. Is ollama running?'))
+      .catch(() => setExplanation('Gemma service unavailable. Please try again.'))
       .finally(() => setLoadingExplain(false))
   }, [selectedZone])
 
@@ -46,7 +46,7 @@ export default function GemmaPanel({ selectedZone, patrolCount }) {
     })
       .then(r => r.json())
       .then(d => setRecommendation(d.recommendation ?? ''))
-      .catch(() => setRecommendation('Unable to reach Gemma. Is ollama running?'))
+      .catch(() => setRecommendation('Gemma service unavailable. Please try again.'))
       .finally(() => setLoadingDispatch(false))
   }
 
