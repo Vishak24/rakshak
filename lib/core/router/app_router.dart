@@ -64,7 +64,11 @@ final router = GoRouter(
       path: '/night-watch',
       builder: (context, state) => const Scaffold(
         backgroundColor: Colors.transparent,
-        body: NightWatchOverlay(),
+        body: SafeArea(
+          top: true,
+          bottom: false,
+          child: NightWatchOverlay(),
+        ),
       ),
     ),
     GoRoute(

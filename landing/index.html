@@ -819,6 +819,13 @@ footer{
 .footer-copy{font-size:.78rem;color:var(--text-dim)}
 
 /* ── RESPONSIVE ── */
+
+/* Global: prevent horizontal overflow from absolute glow elements */
+html,body{overflow-x:hidden;max-width:100vw}
+
+/* Section padding: fluid instead of fixed 6rem */
+.section{padding:clamp(3rem,6vw,6rem) 0}
+
 @media(max-width:900px){
   .problem-grid{grid-template-columns:1fr;gap:3rem}
   .how-steps{flex-direction:column;align-items:stretch}
@@ -826,25 +833,119 @@ footer{
   .how-connector{display:none}
   .bento-grid{grid-template-columns:1fr;grid-template-rows:auto}
   .bento-main,.bento-ml{grid-row:auto;grid-column:auto}
-  .bento-row2{grid-column:auto;grid-template-columns:1fr}
+  .bento-row2{grid-column:auto;grid-template-columns:repeat(2,1fr)}
   #tech .tech-inner{grid-template-columns:1fr;gap:2rem}
   .arch-flows{grid-template-columns:1fr;grid-column:auto}
   .metrics-grid{grid-template-columns:repeat(2,1fr)}
   .phone-frames{grid-template-columns:repeat(2,1fr)}
   .tech-grid{grid-template-columns:repeat(2,1fr)}
 }
+
 @media(max-width:768px){
-  .nav-links{display:none}
+  /* Nav */
+  .nav-links{
+    display:none;
+    position:fixed;top:64px;left:0;right:0;z-index:999;
+    flex-direction:column;align-items:flex-start;gap:0;
+    background:rgba(13,13,13,0.98);
+    border-bottom:1px solid var(--border);
+    padding:.5rem 0;
+    transform:translateY(-8px);opacity:0;
+    transition:transform .2s ease,opacity .2s ease;
+  }
+  .nav-links.is-open{
+    display:flex;transform:translateY(0);opacity:1;
+  }
+  .nav-links li{width:100%}
+  .nav-links a{
+    display:block;padding:.85rem 1.5rem;
+    font-size:.95rem;border-bottom:1px solid var(--border);
+  }
+  .nav-links li:last-child a{border-bottom:none}
   .nav-hamburger{display:flex}
-  .hero-stats{gap:1.5rem}
-  .hero-stat{border-right:none;padding-right:0;margin-right:0;padding-bottom:1rem;border-bottom:1px solid var(--border)}
-  .hero-stat:last-child{border-bottom:none;padding-bottom:0}
-  .hero-stats{flex-direction:column;align-items:flex-start}
+  /* Hide pill on small nav to prevent overflow */
+  .nav-aws-pill{display:none}
+
+  /* Hero */
+  .hero-h1{font-size:clamp(2rem,7vw,3.5rem)}
+  .hero-red-glow{width:100vw;left:0;transform:none}
+  .hero-teal-glow{width:100vw;right:0}
+
+  /* Hero stats: grid instead of flex with broken borders */
+  .hero-stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+    gap:1rem;
+    padding-bottom:3rem;
+    border-top:1px solid var(--border);
+    padding-top:2rem;
+  }
+  .hero-stat{
+    border-right:none;border-bottom:none;
+    padding:0;margin:0;
+  }
+  .hero-stat:last-child{border-bottom:none}
+
+  /* Step tags */
+  .step-tags{flex-wrap:wrap;gap:.4rem}
+
+  /* Bento */
+  .bento-card{padding:1.25rem;overflow:hidden}
+  .bento-card-desc{max-width:none}
+  .dashboard-mock{width:100%}
+  .bento-row2{grid-template-columns:1fr}
+
+  /* Tech heading */
+  #tech .section-heading{font-size:clamp(1.5rem,4vw,2.75rem)}
+
+  /* Metrics */
+  .metric-num{font-size:clamp(2rem,4vw,2.5rem)}
+
+  /* Demo tabs: horizontal scroll */
+  .demo-tabs{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding-bottom:0;
+  }
+  .demo-tabs::-webkit-scrollbar{display:none}
+  .demo-tab{
+    flex-shrink:0;
+    font-size:.75rem;
+    padding:.5rem .75rem;
+    white-space:nowrap;
+  }
+  /* Browser body min-height on mobile */
+  .browser-body{min-height:280px;aspect-ratio:unset}
+
+  /* #screens cards */
+  #screens .bento-card,
+  #screens > div > div > a > div{padding:1.25rem}
 }
+
+@media(max-width:640px){
+  .bento-row2{grid-template-columns:1fr}
+}
+
 @media(max-width:480px){
   .phone-frames{grid-template-columns:1fr 1fr}
   .metrics-grid{grid-template-columns:repeat(2,1fr)}
   .problem-stats{grid-template-columns:1fr 1fr}
+  .tech-grid{grid-template-columns:repeat(2,1fr)}
+  /* Open-app buttons full width */
+  .browser-body a[href*="pages.dev"],
+  .browser-body a[href*="netlify"]{
+    display:block;width:100%;text-align:center;box-sizing:border-box;
+  }
+  /* Nav CTA: hide text, keep icon */
+  .nav-aws-pill{display:none}
+}
+
+@media(max-width:360px){
+  .problem-stats{grid-template-columns:1fr}
+  .tech-grid{grid-template-columns:1fr}
+  .metrics-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -868,7 +969,7 @@ footer{
     <a href="https://rakshak-sentinel-app.netlify.app" target="_blank" rel="noopener noreferrer" class="nav-cta">
       Launch Dashboard <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </a>
-    <button class="nav-hamburger" aria-label="Menu" onclick="document.querySelector('.nav-links').style.display=document.querySelector('.nav-links').style.display==='flex'?'none':'flex'">
+    <button class="nav-hamburger" aria-label="Menu" aria-expanded="false" id="nav-hamburger">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
   </div>
@@ -1797,6 +1898,44 @@ document.addEventListener('DOMContentLoaded', function() {
     footLabel: 'Open in Full Tab',
   });
 });
+
+// ── Hamburger nav toggle ──
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var menu = document.querySelector('.nav-links');
+  if(!btn || !menu) return;
+
+  function openMenu(){
+    menu.classList.add('is-open');
+    btn.setAttribute('aria-expanded','true');
+  }
+  function closeMenu(){
+    menu.classList.remove('is-open');
+    btn.setAttribute('aria-expanded','false');
+  }
+
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    menu.classList.contains('is-open') ? closeMenu() : openMenu();
+  });
+
+  // Close on outside click
+  document.addEventListener('click', function(e){
+    if(!menu.contains(e.target) && e.target !== btn){
+      closeMenu();
+    }
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') closeMenu();
+  });
+
+  // Close when a nav link is tapped
+  menu.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', closeMenu);
+  });
+})();
 </script>
 </body>
 </html>

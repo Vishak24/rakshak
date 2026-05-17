@@ -27,13 +27,19 @@ export function useLivePatrols() {
       // Don't bail on empty — keep existing state if API returns nothing
       if (!Array.isArray(data)) return
 
+      // Spread patrols across zones — index 0→T.Nagar, 1→Mylapore, 2→Anna Nagar
+      const ZONE_STARTS = [
+        { lat: 13.0418, lng: 80.2341 },
+        { lat: 13.0339, lng: 80.2619 },
+        { lat: 13.0850, lng: 80.2101 },
+      ]
       setPatrolStates(data.map((item, idx) => ({
         id:      item.patrol_id ?? item.id ?? `P-${idx + 1}`,
         name:    item.officer   ?? item.name ?? 'Officer',
         vehicle: item.vehicle   ?? 'TN-01-PA-XXXX',
         zone:    item.zone      ?? '',
         status:  normaliseStatus(item.status),
-        position: { lat: 13.0827, lng: 80.2707 },
+        position: ZONE_STARTS[idx % ZONE_STARTS.length],
       })))
     } catch {
       // Keep existing state on error

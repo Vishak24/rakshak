@@ -17,3 +17,5 @@
 .patrolStat { display: flex; align-items: center; gap: 12px; }
 .psVal { font-size: 28px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; min-width: 40px; }
 .psLbl { font-size: 13px; color: var(--muted); font-weight: 500; }
+.rightCol { display: flex; flex-direction: column; overflow: hidden; }
+.rightCol > :last-child { flex: 1; overflow: hidden; }

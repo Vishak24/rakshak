@@ -78,3 +78,18 @@ Thumbs.db
 
 # Local Netlify folder
 .netlify
+
+# Claude Code local settings (may contain credentials)
+.claude/
+
+# Python
+__pycache__/
+*.pkl
+.venv/
+
+# Dashboard build artifacts
+rakshak-dashboard/dist/
+dashboard/dist/
+
+# Additional env files
+.env.production

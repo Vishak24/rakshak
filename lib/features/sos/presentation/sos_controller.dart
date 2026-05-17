@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/sos_repository.dart';
 import '../domain/sos_service.dart';
 import '../../../core/widgets/judge_mode_overlay.dart';
+import '../../auth/presentation/auth_controller.dart';
 import '../../sentinel/presentation/sentinel_controller.dart';
 
 /// SOS state
@@ -79,7 +80,8 @@ class SosController extends StateNotifier<SosState> {
 
   Future<void> markSecured() async {
     try {
-      await _sosService.cancelSos();
+      final phone = _ref.read(authControllerProvider).phoneNumber;
+      await _sosService.cancelSos(userPhone: phone);
       state = state.copyWith(status: SosStatus.secured);
     } catch (e) {
       state = state.copyWith(

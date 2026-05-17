@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/rk_button.dart';
 import '../../../core/widgets/rk_label.dart';
 import '../../../core/widgets/rk_pulse.dart';
 import '../../../core/widgets/rk_status_chip.dart';
@@ -69,7 +70,9 @@ class _SentinelScreenState extends ConsumerState<SentinelScreen> {
     // TODO: wire to sentinelControllerProvider
     final state = ref.watch(sentinelControllerProvider);
     final score = state.riskScore?.score;
-    final location = '${state.pincode} · ${state.areaName.toUpperCase()}';
+    final location = state.pincode > 0
+        ? '${state.pincode} · ${state.areaName.toUpperCase()}'
+        : '— · ACQUIRING LOCATION';
     final scoreColor = _scoreColor(score);
     final chipLabel = _chipLabel(score);
 
@@ -155,7 +158,11 @@ class _SentinelScreenState extends ConsumerState<SentinelScreen> {
                               _StatsRow(state: state, lang: lang),
                               const SizedBox(height: AppSpacing.md),
 
-                              // ── 10. AI monitoring banner ─────────────
+                              // ── 10. Suraksha Mode ─────────────────────
+                              const _SurakshaSection(),
+                              const SizedBox(height: AppSpacing.md),
+
+                              // ── 11. AI monitoring banner ─────────────
                               _MonitorBanner(lang: lang),
                             ],
                           ),
@@ -511,6 +518,280 @@ class _Shimmer extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+}
+
+// ── 10. Suraksha Mode section ─────────────────────────────────────────────────
+
+class _SurakshaSection extends ConsumerWidget {
+  const _SurakshaSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(surakshaControllerProvider);
+    final ctrl = ref.read(surakshaControllerProvider.notifier);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(
+          color: AppColors.surfaceContainer,
+          thickness: 1,
+          height: 1,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        Row(
+          children: [
+            const Icon(Icons.home_outlined,
+                color: AppColors.accentBright, size: 15),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: RkLabel.small('SURAKSHA MODE',
+                  color: AppColors.textSecondary),
+            ),
+            Transform.scale(
+              scale: 0.75,
+              alignment: Alignment.centerRight,
+              child: Switch(
+                value: s.enabled,
+                onChanged: (_) => ctrl.toggle(),
+                activeThumbColor: AppColors.accentBright,
+                activeTrackColor:
+                    AppColors.accent.withValues(alpha: 0.30),
+                inactiveThumbColor: AppColors.surfaceHigh,
+                inactiveTrackColor: AppColors.surfaceContainer,
+              ),
+            ),
+          ],
+        ),
+
+        if (s.enabled) ...[
+          const SizedBox(height: AppSpacing.xs),
+
+          Row(
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: AppColors.success,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              RkLabel.small('HOME: ANNA NAGAR, CHENNAI',
+                  color: AppColors.textTertiary),
+            ],
+          ),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          RkButton(
+            label: 'SIMULATE 10 PM CHECK',
+            icon: Icons.nightlight_round,
+            isLoading: s.isCheckinLoading,
+            onPressed: s.isCheckinLoading ? null : ctrl.simulateCheckin,
+          ),
+
+          if (s.checkinMessage.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _CheckinCard(message: s.checkinMessage),
+          ],
+
+          if (s.checkinMessage.isNotEmpty &&
+              !s.isEscalating &&
+              !s.isEscalated) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _ResponseButton(
+                    label: '✅ I\'m Safe',
+                    color: AppColors.success,
+                    onTap: ctrl.markSafe,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: _ResponseButton(
+                    label: '🆘 Need Help',
+                    color: AppColors.riskHigh,
+                    onTap: () => ctrl.escalate(),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: _ResponseButton(
+                    label: '📍 Share Location',
+                    color: AppColors.accentBright,
+                    onTap: ctrl.shareLocation,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          if (s.isEscalating && !s.isEscalated) ...[
+            const SizedBox(height: AppSpacing.md),
+            const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.riskHigh,
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+          ],
+
+          if (s.isEscalated && s.escalationMessage.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _EscalationCard(
+              message: s.escalationMessage,
+              unitsNotified: s.unitsNotified,
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+}
+
+class _CheckinCard extends StatelessWidget {
+  final String message;
+  const _CheckinCard({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: const Border(
+          left: BorderSide(color: AppColors.accentBright, width: 2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('🤖', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: AppSpacing.xs),
+              RkLabel.small('GEMMA AI CHECK-IN',
+                  color: AppColors.accentBright),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            message,
+            style: AppText.bodyMedium.copyWith(
+                color: AppColors.textSecondary, fontSize: 13, height: 1.6),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResponseButton extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _ResponseButton(
+      {required this.label, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.sm, horizontal: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
+              height: 1.3,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EscalationCard extends StatelessWidget {
+  final String message;
+  final int unitsNotified;
+  const _EscalationCard(
+      {required this.message, required this.unitsNotified});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.alertRed.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+            color: AppColors.riskHigh.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.local_police_outlined,
+              color: AppColors.riskHigh, size: 18),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    RkLabel.small('POLICE ALERTED',
+                        color: AppColors.riskHigh),
+                    const SizedBox(width: AppSpacing.sm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.riskHigh.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: Text(
+                        '$unitsNotified UNITS',
+                        style: AppText.labelSmallCaps.copyWith(
+                            color: AppColors.riskHigh, fontSize: 9),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  message,
+                  style: AppText.bodySmall
+                      .copyWith(color: AppColors.textSecondary, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

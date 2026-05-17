@@ -2,32 +2,20 @@ import React, { useState, useEffect } from 'react'
 import s from './UsersNotHomeCard.module.css'
 import { ENDPOINTS } from '../../config/api'
 
-const FALLBACK_DATA = [
-  { zone: 'T.Nagar',    count: 12 },
-  { zone: 'Anna Nagar', count: 8  },
-  { zone: 'Velachery',  count: 15 },
-  { zone: 'Adyar',      count: 6  },
-  { zone: 'Mylapore',   count: 10 },
-  { zone: 'Tambaram',   count: 18 },
-  { zone: 'Chromepet',  count: 9  },
-]
-
 /**
- * Renders only after 10 PM (hour >= 22).
- * Polls /police/citizens/active every 60s; falls back to static data silently.
+ * Renders only after 10 PM (hour >= 22) AND only if /police/citizens/active
+ * returns real data. No fallback mock entries — hides entirely if API is empty.
  */
 export default function UsersNotHomeCard() {
   const [hour,       setHour]       = useState(() => new Date().getHours())
-  const [zoneData,   setZoneData]   = useState(FALLBACK_DATA)
+  const [zoneData,   setZoneData]   = useState([])
   const [totalCount, setTotalCount] = useState(0)
 
-  // Re-check clock every minute
   useEffect(() => {
     const id = setInterval(() => setHour(new Date().getHours()), 60_000)
     return () => clearInterval(id)
   }, [])
 
-  // Poll live endpoint only after 10 PM
   useEffect(() => {
     if (hour < 22) return
 
@@ -50,7 +38,7 @@ export default function UsersNotHomeCard() {
           setTotalCount(total)
         }
       } catch {
-        // Keep fallback data silently
+        // API unavailable — keep empty, don't show mock data
       }
     }
 
@@ -59,11 +47,12 @@ export default function UsersNotHomeCard() {
     return () => clearInterval(id)
   }, [hour])
 
-  if (hour < 22) return null
+  // Hide before 10 PM or if no live data
+  if (hour < 22 || zoneData.length === 0) return null
 
   const displayTotal = totalCount > 0
     ? totalCount
-    : zoneData.reduce((s, z) => s + z.count, 0)
+    : zoneData.reduce((sum, z) => sum + z.count, 0)
 
   return (
     <div className={s.card}>
@@ -80,15 +69,11 @@ export default function UsersNotHomeCard() {
             <div className={s.right}>
               <span className={s.count}>{count}</span>
               {count > 10 && (
-                <span className={s.warn} title="High density — patrol auto-adjusting">⚠</span>
+                <span className={s.warn} title="High density">⚠</span>
               )}
             </div>
           </div>
         ))}
-      </div>
-
-      <div className={s.footer}>
-        Patrol routes auto-adjusting for high-density zones
       </div>
     </div>
   )

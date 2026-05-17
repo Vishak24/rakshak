@@ -24,6 +24,10 @@ export const ENDPOINTS = {
   reportsGet:     `${API_BASE}/reports`,
   reportsApprove: (id) => `${API_BASE}/reports/approve/${id}`,
   reportsReject:  (id) => `${API_BASE}/reports/reject/${id}`,
+
+  // Gemma local AI
+  gemmaExplain:  'http://localhost:5001/gemma/explain',
+  gemmaDispatch: 'http://localhost:5001/gemma/dispatch',
 }
 
 export default ENDPOINTS

@@ -52,7 +52,7 @@ class IntelligenceController extends StateNotifier<IntelligenceState> {
 
   /// Standard scan — uses GPS lat/lon + default pincode
   Future<void> scanLocation(double latitude, double longitude,
-      {String lang = 'en', int pincode = 600001}) async {
+      {String lang = 'en', int pincode = 0}) async {
     state = state.copyWith(status: ScanStatus.scanning, progress: 0.0);
 
     try {

@@ -247,8 +247,18 @@ class _Phase2 extends ConsumerWidget {
           RkButton(
             label: lang == 'ta' ? 'DISMISS ALERT' : 'DISMISS ALERT',
             variant: RkButtonVariant.secondary,
-            onPressed: () {
-              ref.read(sosControllerProvider.notifier).markSecured();
+            onPressed: () async {
+              await ref.read(sosControllerProvider.notifier).markSecured();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'SOS cancelled. Your number has been shared with the nearest patrol in case they need to follow up.',
+                  ),
+                  duration: Duration(seconds: 5),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
               context.go('/sentinel');
             },
           ),

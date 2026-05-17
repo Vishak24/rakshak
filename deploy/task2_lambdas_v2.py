@@ -239,24 +239,42 @@ def lambda_handler(event, context):
 # LAMBDA 3: rakshak-sos-handler
 # ─────────────────────────────────────────────────────────────
 SOS_CODE = r'''
-import json, os, boto3
+import json, os, uuid, boto3
 from boto3.dynamodb.conditions import Attr
-from datetime import datetime
+from datetime import datetime, timedelta
 
 REGION = 'ap-south-1'
 KEY_ID = os.environ.get('RAKSHAK_AWS_ACCESS_KEY_ID')
 SECRET  = os.environ.get('RAKSHAK_AWS_SECRET_ACCESS_KEY')
 
+def _ddb():
+    return boto3.resource('dynamodb', region_name=REGION,
+                          aws_access_key_id=KEY_ID, aws_secret_access_key=SECRET)
+
 def _table():
-    ddb = boto3.resource('dynamodb', region_name=REGION,
-                         aws_access_key_id=KEY_ID, aws_secret_access_key=SECRET)
-    return ddb.Table('rakshak-sos-alerts')
+    return _ddb().Table('rakshak-sos-alerts')
 
 CORS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
 }
+
+# SOS status → patrol status mapping (driven by SOS lifecycle only)
+PATROL_STATUS_MAP = {
+    'dispatched': 'Responding',
+    'at_scene':   'AtScene',
+    'resolved':   'Patrolling',
+}
+
+def _update_patrol(patrol_id, new_status):
+    patrol_table = _ddb().Table('rakshak-patrols')
+    patrol_table.update_item(
+        Key={'patrol_id': patrol_id},
+        UpdateExpression='SET #s = :s, updated_at = :t',
+        ExpressionAttributeNames={'#s': 'status'},
+        ExpressionAttributeValues={':s': new_status, ':t': datetime.utcnow().isoformat() + 'Z'},
+    )
 
 def lambda_handler(event, context):
     method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
@@ -268,10 +286,88 @@ def lambda_handler(event, context):
     try:
         table = _table()
 
-        # GET /sos/live
+        # POST /sos/live — citizen creates a new SOS alert
+        if method == 'POST' and path.endswith('/sos/live'):
+            body = json.loads(event.get('body', '{}') or '{}')
+            sos_id  = str(uuid.uuid4())
+            now_iso = datetime.utcnow().isoformat() + 'Z'
+            item = {
+                'sos_id':     sos_id,
+                'created_at': now_iso,
+                'status':     'active',
+                'risk_level': body.get('risk_level', 'HIGH'),
+                'latitude':   str(body.get('latitude',  '13.0827')),
+                'longitude':  str(body.get('longitude', '80.2707')),
+            }
+            pincode = body.get('pincode')
+            if pincode:
+                item['pincode']   = str(pincode)
+                item['zone_name'] = str(pincode)
+            table.put_item(Item=item)
+            return {'statusCode': 201, 'headers': CORS, 'body': json.dumps(item)}
+
+        # GET /sos/live — only active/dispatched alerts from the last 24 hours
         if method == 'GET' and path.endswith('/sos/live'):
-            resp  = table.scan(FilterExpression=Attr('status').eq('active'))
+            cutoff = (datetime.utcnow() - timedelta(hours=24)).isoformat() + 'Z'
+            resp = table.scan(
+                FilterExpression=Attr('status').is_in(['active', 'dispatched']) &
+                                 Attr('created_at').gte(cutoff)
+            )
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(resp.get('Items', []), default=str)}
+
+        # PATCH /police/sos/{id}/status — officer updates SOS; cascades to patrol status
+        if method == 'PATCH' and '/police/sos/' in path and path.endswith('/status'):
+            sos_id = path.split('/police/sos/')[-1].rsplit('/status', 1)[0]
+            body = json.loads(event.get('body', '{}') or '{}')
+            new_sos_status = body.get('status', '')
+            patrol_id = body.get('patrol_id')
+
+            now_iso = datetime.utcnow().isoformat() + 'Z'
+            update_expr = 'SET #s = :s, updated_at = :t'
+            expr_values = {':s': new_sos_status, ':t': now_iso}
+
+            if patrol_id:
+                update_expr += ', patrol_id = :pid'
+                expr_values[':pid'] = patrol_id
+
+            table.update_item(
+                Key={'sos_id': sos_id},
+                UpdateExpression=update_expr,
+                ExpressionAttributeNames={'#s': 'status'},
+                ExpressionAttributeValues=expr_values,
+            )
+
+            # Resolve patrol_id: body → existing SOS record → auto-assign nearest
+            if not patrol_id:
+                sos_item = table.get_item(Key={'sos_id': sos_id}).get('Item', {})
+                patrol_id = sos_item.get('patrol_id')
+
+                # Auto-assign nearest available patrol on first dispatch
+                if not patrol_id and new_sos_status == 'dispatched':
+                    sos_zone = sos_item.get('pincode', sos_item.get('zone', ''))
+                    patrol_table = _ddb().Table('rakshak-patrols')
+                    available = patrol_table.scan(
+                        FilterExpression=Attr('status').eq('Patrolling')
+                    ).get('Items', [])
+                    if available:
+                        matched = next(
+                            (p for p in available if p.get('zone') == sos_zone), None
+                        )
+                        assigned = matched if matched else available[0]
+                        patrol_id = assigned['patrol_id']
+                        table.update_item(
+                            Key={'sos_id': sos_id},
+                            UpdateExpression='SET patrol_id = :pid',
+                            ExpressionAttributeValues={':pid': patrol_id},
+                        )
+
+            new_patrol_status = PATROL_STATUS_MAP.get(new_sos_status)
+            if patrol_id and new_patrol_status:
+                _update_patrol(patrol_id, new_patrol_status)
+
+            return {'statusCode': 200, 'headers': CORS,
+                    'body': json.dumps({'sos_id': sos_id, 'status': new_sos_status,
+                                        'patrol_id': patrol_id})}
 
         # POST /sos/dispatch/{id}
         if method == 'POST' and '/sos/dispatch/' in path:
@@ -302,10 +398,11 @@ def lambda_handler(event, context):
 
 # ─────────────────────────────────────────────────────────────
 # LAMBDA 4: rakshak-patrol-handler
+# Patrol status changes ONLY via SOS lifecycle (PATCH /police/sos/{id}/status).
+# This handler is read-only; no simulation or autonomous status mutation.
 # ─────────────────────────────────────────────────────────────
 PATROL_CODE = r'''
 import json, os, boto3
-from datetime import datetime
 
 REGION = 'ap-south-1'
 KEY_ID = os.environ.get('RAKSHAK_AWS_ACCESS_KEY_ID')
@@ -318,40 +415,25 @@ def _table():
 
 CORS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
 }
 
 def lambda_handler(event, context):
-    method      = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
-    path        = event.get('rawPath', '')
-    path_params = event.get('pathParameters') or {}
+    method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
 
     if method == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS, 'body': ''}
 
     try:
-        table = _table()
-
-        # GET /patrols
+        # GET /patrols — return current patrol state; status reflects last SOS action
         if method == 'GET':
-            resp  = table.scan()
-            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(resp.get('Items', []), default=str)}
+            resp = _table().scan()
+            return {'statusCode': 200, 'headers': CORS,
+                    'body': json.dumps(resp.get('Items', []), default=str)}
 
-        # PATCH /patrols/{id}/status
-        if method == 'PATCH' and '/status' in path:
-            patrol_id = path_params.get('id') or path.split('/patrols/')[-1].split('/status')[0]
-            body      = json.loads(event.get('body', '{}') or '{}')
-            new_status = body.get('status', 'Unknown')
-            table.update_item(
-                Key={'patrol_id': patrol_id},
-                UpdateExpression='SET #s = :s, updated_at = :t',
-                ExpressionAttributeNames={'#s': 'status'},
-                ExpressionAttributeValues={':s': new_status, ':t': datetime.utcnow().isoformat() + 'Z'},
-            )
-            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'patrol_id': patrol_id, 'status': new_status})}
-
-        return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'route not found'})}
+        return {'statusCode': 405, 'headers': CORS,
+                'body': json.dumps({'error': 'patrol status is managed via SOS lifecycle'})}
     except Exception as e:
         return {'statusCode': 500, 'headers': CORS, 'body': json.dumps({'error': str(e)})}
 '''

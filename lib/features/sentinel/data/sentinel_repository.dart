@@ -14,8 +14,8 @@ class SentinelRepository implements SentinelService {
   // Current location state — set by the controller after GPS acquisition
   double _lat = 13.0827;
   double _lng = 80.2707;
-  int _pincode = 600001;
-  String _areaName = 'Parrys Corner';
+  int _pincode = 0;
+  String _areaName = '';
 
   // ── Getters for location state ──────────────────────────────────────────
   double get latitude => _lat;
@@ -76,5 +76,37 @@ class SentinelRepository implements SentinelService {
   @override
   Future<bool> isNightWatchActive() async {
     return _nightWatchActive;
+  }
+
+  Future<String> callGemmaCheckin(String userName, String zone) async {
+    final response = await http.post(
+      Uri.parse(ApiEndpoints.gemmaCheckin),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'user_name': userName,
+        'zone': zone,
+        'time': DateTime.now().toIso8601String(),
+      }),
+    ).timeout(const Duration(seconds: 60));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data['message'] as String? ?? '';
+    }
+    throw Exception('Checkin failed: ${response.statusCode}');
+  }
+
+  Future<Map<String, dynamic>> callGemmaEscalate(
+      String user, String zone, String reason) async {
+    final response = await http.post(
+      Uri.parse(ApiEndpoints.gemmaEscalate),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user': user, 'zone': zone, 'reason': reason}),
+    ).timeout(const Duration(seconds: 60));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    throw Exception('Escalate failed: ${response.statusCode}');
   }
 }

@@ -23,6 +23,7 @@ ROUTES = [
     ('GET',   '/reports',                'rakshak-reports-handler'),
     ('PATCH', '/reports/approve/{id}',   'rakshak-reports-handler'),
     ('PATCH', '/reports/reject/{id}',    'rakshak-reports-handler'),
+    ('POST',  '/sos/live',               'rakshak-sos-handler'),
     ('GET',   '/sos/live',               'rakshak-sos-handler'),
     ('POST',  '/sos/dispatch/{id}',      'rakshak-sos-handler'),
     ('PATCH', '/sos/resolve/{id}',       'rakshak-sos-handler'),

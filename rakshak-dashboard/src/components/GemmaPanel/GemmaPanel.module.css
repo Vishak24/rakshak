@@ -1,0 +1,131 @@
+.panel {
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding: 12px 14px;
+  flex-shrink: 0;
+}
+
+.hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.bar {
+  width: 3px;
+  height: 11px;
+  border-radius: 2px;
+  background: #a855f7;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex: 1;
+}
+
+.badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+  white-space: nowrap;
+}
+
+.empty {
+  font-size: 11px;
+  color: var(--dim);
+  text-align: center;
+  padding: 6px 0 4px;
+}
+
+.zoneLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.zoneCode {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.riskTag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 11px;
+  min-height: 44px;
+}
+
+.text {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a855f7;
+  display: inline-block;
+  flex-shrink: 0;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.65); }
+}
+
+.dispatchBtn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 12px;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 5px;
+  color: #a855f7;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: 0.3px;
+  font-family: inherit;
+}
+
+.dispatchBtn:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.2);
+}
+
+.dispatchBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

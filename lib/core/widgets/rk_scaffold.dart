@@ -26,10 +26,14 @@ class RkScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      // body fills the space above the nav bar; SafeArea is handled per-screen.
-      // Scaffold.bottomNavigationBar automatically insets the body above the
-      // nav bar, so no manual bottom padding is needed.
-      body: body,
+      // SafeArea applied here (top only) clears the Dynamic Island / notch for
+      // every shell screen. bottom: false because the bottom nav bar carries its
+      // own SafeArea(top: false) and Scaffold already insets the body above it.
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: body,
+      ),
       bottomNavigationBar: _RkBottomNav(
         currentIndex: currentIndex,
         onTap: onTabChanged,

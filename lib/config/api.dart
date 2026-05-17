@@ -13,3 +13,4 @@ const String patrolOptimizer = '$apiBase/patrol/optimize';
 const String citizensActive = '$apiBase/police/citizens/active';
 const String policeRoute    = '$apiBase/police/route';
 const String sosActive      = '$apiBase/police/sos/active';
+const String sosCancelled   = '$apiBase/sos/cancelled';

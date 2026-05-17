@@ -10,6 +10,7 @@ import '../domain/sos_service.dart';
 class SosRepository implements SosService {
   bool _sosActive = false;
   String? _activeSosId;
+  String? _activePincode;
 
   /// Try to get GPS coordinates within 5 seconds.
   /// Returns null if permission denied, timed out, or on web.
@@ -57,6 +58,7 @@ class SosRepository implements SosService {
       if (pincode != null) {
         body['pincode']    = pincode.toString();
         body['zone_name']  = pincode.toString(); // backend sets zone_name = pincode
+        _activePincode     = pincode.toString();
       }
 
       final res = await http
@@ -83,7 +85,7 @@ class SosRepository implements SosService {
   }
 
   @override
-  Future<bool> cancelSos() async {
+  Future<bool> cancelSos({String? userPhone}) async {
     if (_activeSosId != null) {
       try {
         await http
@@ -91,8 +93,27 @@ class SosRepository implements SosService {
             .timeout(const Duration(seconds: 8));
       } catch (_) {}
     }
+
+    // Notify backend — patrol can follow up via phone
+    try {
+      await http
+          .post(
+            Uri.parse(api.sosCancelled),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'sos_id':     _activeSosId ?? '',
+              'user_phone': userPhone ?? '',
+              'pincode':    _activePincode ?? '',
+              'reason':     'User cancelled',
+              'timestamp':  DateTime.now().toIso8601String(),
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {}
+
     _sosActive = false;
     _activeSosId = null;
+    _activePincode = null;
     return true;
   }
 

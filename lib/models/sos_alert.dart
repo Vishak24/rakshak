@@ -8,6 +8,7 @@ class SosAlert {
   final double? lng;
   final String? pincode;
   final String? sosId;
+  final String? userPhone;
 
   const SosAlert({
     required this.id,
@@ -19,6 +20,7 @@ class SosAlert {
     this.lng,
     this.pincode,
     this.sosId,
+    this.userPhone,
   });
 
   factory SosAlert.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class SosAlert {
       lng:       (json['longitude'] as num?)?.toDouble(),
       pincode:   pincode,
       sosId:     json['sos_id']?.toString(),
+      userPhone: json['user_phone']?.toString(),
     );
   }
 
@@ -55,7 +58,7 @@ class SosAlert {
     '600005': 'Chintadripet',   '600006': 'Chepauk',
     '600007': 'Perambur',       '600008': 'Chepauk',
     '600009': 'Kilpauk',        '600010': 'Vepery',
-    '600011': 'Royapuram',      '600012': 'Tondiarpet',
+    '600011': 'Perambur',       '600012': 'Tondiarpet',
     '600013': 'Tiruvottiyur',   '600015': 'Padi',
     '600017': 'T. Nagar',       '600018': 'Kodambakkam',
     '600019': 'Ennore',         '600020': 'Anna Nagar',

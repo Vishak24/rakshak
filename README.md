@@ -1,3 +1,9 @@
+## 🏆 Rakshak 2.0 — Gemma 4 Good Hackathon Submission
+This branch contains the Gemma 4 integration built for the [Gemma 4 Good Hackathon](https://kaggle.com/competitions/gemma-4-good-hackathon).
+The original AWS competition version is preserved on the `main` branch.
+
+---
+
 # Rakshak
 
 **AI-powered women's safety platform for Chennai, India**

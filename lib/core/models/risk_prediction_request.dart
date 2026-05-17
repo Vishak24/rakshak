@@ -96,7 +96,7 @@ class RiskPredictionRequest {
   factory RiskPredictionRequest.fromLocation({
     required double latitude,
     required double longitude,
-    int pincode = 600001,
+    int pincode = 0,
   }) =>
       fromGps(latitude, longitude, pincode);
 

@@ -50,11 +50,10 @@ export default function RiskHeatmap({ apiData, lang, onPatrolClick }) {
 
     const bounds = L.latLngBounds(L.latLng(12.80, 80.10), L.latLng(13.23, 80.32))
     const map = L.map(mapRef.current, {
-      center: CHENNAI_CENTER, zoom: 12, minZoom: 10, maxZoom: 16,
+      center: CHENNAI_CENTER, zoom: 12, minZoom: 11, maxZoom: 16,
       maxBounds: bounds, maxBoundsViscosity: 1.0,
       zoomControl: true, attributionControl: false,
     })
-    map.fitBounds(bounds, { padding: [20, 20] })
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
       { subdomains: 'abcd', maxZoom: 19 }).addTo(map)
     mapInstance.current = map
@@ -68,10 +67,10 @@ export default function RiskHeatmap({ apiData, lang, onPatrolClick }) {
       }).addTo(map)
     }
 
-    // Zone polygons
-    fetch('/chennai-zones-fixed.geojson')
-      .then(r => { if (!r.ok) throw new Error('no geojson'); return r.json() })
-      .then(gj => renderGeoJSON(map, gj))
+    // KML zones
+    fetch('/Final_Chennai_Pincode.kml')
+      .then(r => { if (!r.ok) throw new Error('no kml'); return r.text() })
+      .then(kmlText => renderKML(map, kmlText))
       .catch(() => renderCircles(map))
 
     // Patrol layer
@@ -128,21 +127,28 @@ export default function RiskHeatmap({ apiData, lang, onPatrolClick }) {
     return () => clearInterval(timer)
   }, [])
 
-  // ── GeoJSON renderer ──────────────────────────────────────────────────────
-  function renderGeoJSON(map, gj) {
+  // ── KML renderer ──────────────────────────────────────────────────────────
+  function renderKML(map, kmlText) {
+    const parser = new DOMParser()
+    const kml    = parser.parseFromString(kmlText, 'text/xml')
     const group  = L.layerGroup().addTo(map)
     const fills   = { HIGH: 0.20, MEDIUM: 0.15, LOW: 0.10 }
     const weights = { HIGH: 1.5,  MEDIUM: 1.0,  LOW: 0.8  }
 
-    ;(gj.features || []).forEach(feature => {
-      const pincode = feature.properties?.pincode || ''
+    Array.from(kml.querySelectorAll('Placemark')).forEach(pm => {
+      const coordsEl = pm.querySelector('coordinates')
+      if (!coordsEl) return
+      const latLngs = coordsEl.textContent.trim().split(/\s+/)
+        .filter(c => c.includes(','))
+        .map(c => { const p = c.split(','); return [parseFloat(p[1]), parseFloat(p[0])] })
+        .filter(ll => !isNaN(ll[0]) && !isNaN(ll[1]))
+      if (latLngs.length < 3) return
+
+      const sd      = [...pm.querySelectorAll('SimpleData')].find(el => el.getAttribute('name') === 'Pincode')
+      const pincode = sd?.textContent?.trim() || pm.querySelector('name')?.textContent?.trim() || ''
       const zone    = ZONES.find(z => z.c === pincode)
       const risk    = zone?.r || 'LOW'
       const col     = riskColor(risk)
-
-      const rings = feature.geometry?.coordinates || []
-      const latLngs = (rings[0] || []).map(([lng, lat]) => [lat, lng])
-      if (latLngs.length < 3) return
 
       const poly = L.polygon(latLngs, {
         color: col, weight: weights[risk], opacity: 0.8,

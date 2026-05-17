@@ -12,6 +12,7 @@ class SosDetailScreen extends StatelessWidget {
   static const _surface = Color(0xFF161b22);
   static const _border  = Color(0xFF30363d);
   static const _red     = Color(0xFFef4444);
+  static const _yellow  = Color(0xFFf59e0b);
   static const _textPri = Color(0xFFf0f6fc);
   static const _textMut = Color(0xFF8b949e);
 
@@ -67,28 +68,80 @@ class SosDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // Critical banner
-            Container(
-              width: double.infinity,
-              color: _red,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.warning_rounded, color: Colors.white, size: 16),
-                  SizedBox(width: 8),
-                  Text(
-                    'CRITICAL ALERT ACTIVE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      letterSpacing: 1.5,
+            // Banner — yellow for cancelled, red for active
+            if (alert.status == 'cancelled') ...[
+              Container(
+                width: double.infinity,
+                color: _yellow,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.black, size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          '⚠️ SOS Cancelled by user',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    if (alert.userPhone != null && alert.userPhone!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      GestureDetector(
+                        onTap: () => launchUrl(
+                          Uri.parse('tel:${alert.userPhone}'),
+                          mode: LaunchMode.externalApplication,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.phone, color: Colors.black87, size: 15),
+                            const SizedBox(width: 6),
+                            Text(
+                              '📞 Call to verify: ${alert.userPhone}',
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ),
+            ] else ...[
+              Container(
+                width: double.infinity,
+                color: _red,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.warning_rounded, color: Colors.white, size: 16),
+                    SizedBox(width: 8),
+                    Text(
+                      'CRITICAL ALERT ACTIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             Expanded(
               child: ListView(
@@ -141,34 +194,6 @@ class SosDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Victim description
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'VICTIM DESCRIPTION',
-                          style: TextStyle(
-                            color: _textMut,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Female, mid-20s. Requesting immediate assistance. Last seen near main road junction.',
-                          style: TextStyle(color: _textPri, fontSize: 14, height: 1.5),
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 24),
 
                   // Navigate button

@@ -5,7 +5,7 @@ import '../models/zone_risk.dart';
 final _stubZones = <ZoneRisk>[
   ZoneRisk(
     zoneId: '600001',
-    locationName: "Parrys Corner",
+    locationName: "Park Town",
     latitude: 13.0827,
     longitude: 80.2707,
     assessment: RiskAssessment(
@@ -16,7 +16,7 @@ final _stubZones = <ZoneRisk>[
   ),
   ZoneRisk(
     zoneId: '600003',
-    locationName: "Egmore",
+    locationName: "Royapuram",
     latitude: 13.0732,
     longitude: 80.2609,
     assessment: RiskAssessment(
@@ -49,7 +49,7 @@ final _stubZones = <ZoneRisk>[
   ),
   ZoneRisk(
     zoneId: '600040',
-    locationName: "Anna Nagar",
+    locationName: "Nanganallur",
     latitude: 13.0850,
     longitude: 80.2101,
     assessment: RiskAssessment(
@@ -60,7 +60,7 @@ final _stubZones = <ZoneRisk>[
   ),
   ZoneRisk(
     zoneId: '600020',
-    locationName: "Adyar",
+    locationName: "Saidapet",
     latitude: 13.0012,
     longitude: 80.2565,
     assessment: RiskAssessment(

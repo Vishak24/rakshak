@@ -33,7 +33,7 @@ class IntelligenceRepository implements IntelligenceService {
     final request = RiskPredictionRequest.fromGps(
       latitude,
       longitude,
-      600001, // default pincode when called without explicit pincode
+      0, // GPS-derived lookup; no hardcoded default
     );
 
     final apiResponse = await predict(request);

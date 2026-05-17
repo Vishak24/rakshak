@@ -39,7 +39,7 @@ const _kPincodeItems = <DropdownMenuItem<int>>[
   DropdownMenuItem(value: 600008, child: Text('600008 · Nungambakkam')),
   DropdownMenuItem(value: 600009, child: Text('600009 · Kilpauk')),
   DropdownMenuItem(value: 600010, child: Text('600010 · Aminjikarai')),
-  DropdownMenuItem(value: 600011, child: Text('600011 · Kodambakkam')),
+  DropdownMenuItem(value: 600011, child: Text('600011 · Perambur')),
   DropdownMenuItem(value: 600012, child: Text('600012 · Ashok Nagar')),
   DropdownMenuItem(value: 600013, child: Text('600013 · Tiruvottiyur')),
   DropdownMenuItem(value: 600015, child: Text('600015 · Pattabiram')),

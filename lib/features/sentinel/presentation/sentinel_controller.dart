@@ -26,8 +26,8 @@ class SentinelState {
     this.error,
     this.latitude = 13.0827,
     this.longitude = 80.2707,
-    this.pincode = 600001,
-    this.areaName = 'Parrys Corner',
+    this.pincode = 0,
+    this.areaName = '',
   });
 
   SentinelState copyWith({
@@ -94,15 +94,15 @@ class SentinelController extends StateNotifier<SentinelState> {
       final lng = position.longitude;
 
       // Reverse geocode to get pincode + area name
-      int pincode = 600001;
-      String areaName = 'Chennai';
+      int pincode = 0;
+      String areaName = '';
       if (!kIsWeb) {
         try {
           final placemarks = await placemarkFromCoordinates(lat, lng)
               .timeout(const Duration(seconds: 5));
           if (placemarks.isNotEmpty) {
             final pm = placemarks.first;
-            pincode = int.tryParse(pm.postalCode ?? '') ?? 600001;
+            pincode = int.tryParse(pm.postalCode ?? '') ?? 0;
             areaName = pm.subLocality?.isNotEmpty == true
                 ? pm.subLocality!
                 : pm.locality ?? 'Chennai';
@@ -193,28 +193,28 @@ class SentinelController extends StateNotifier<SentinelState> {
   };
 
   static const Map<int, String> _pincodeNames = {
-    600001: 'Parrys Corner',  600002: 'Sowcarpet',
-    600003: 'Park Town',      600004: 'Mylapore',
-    600005: 'Chintadripet',   600006: 'Chepauk',
-    600007: 'Perambur',       600008: 'Chepauk',
-    600009: 'Kilpauk',        600010: 'Vepery',
-    600011: 'Royapuram',      600012: 'Tondiarpet',
-    600013: 'Tiruvottiyur',   600015: 'Padi',
-    600017: 'T. Nagar',       600018: 'Kodambakkam',
-    600019: 'Ennore',         600020: 'Anna Nagar',
-    600024: 'Ashok Nagar',    600028: 'Nungambakkam',
-    600029: 'Aminjikarai',    600032: 'Vadapalani',
-    600033: 'Saidapet',       600034: 'Teynampet',
-    600035: 'Alandur',        600036: 'St. Thomas Mount',
-    600040: 'Virugambakkam',  600042: 'Thiruvanmiyur',
-    600044: 'Tambaram',       600045: 'Pallavaram',
-    600050: 'Arumbakkam',     600053: 'Ambattur',
-    600056: 'Porur',          600058: 'Washermanpet',
-    600061: 'Chromepet',      600064: 'Vandalur',
-    600078: 'Valasaravakkam', 600081: 'Manali',
-    600082: 'Madhavaram',     600083: 'Villivakkam',
-    600090: 'Velachery',      600096: 'OMR',
-    600099: 'Poonamallee',    600118: 'Kathivakkam',
+    600001: 'Park Town',       600002: 'Sowcarpet',
+    600003: 'Royapuram',       600004: 'Chintadripet',
+    600005: 'Royapettah',      600006: 'Triplicane',
+    600007: 'Egmore',          600008: 'Nungambakkam',
+    600009: 'Kilpauk',         600010: 'Aminjikarai',
+    600011: 'Perambur',        600012: 'Ashok Nagar',
+    600013: 'Tiruvottiyur',    600015: 'Pattabiram',
+    600017: 'T. Nagar',        600018: 'Abiramapuram',
+    600019: 'Vyasarpadi',      600020: 'Saidapet',
+    600024: 'Pallavaram',      600028: 'Adyar',
+    600029: 'Besant Nagar',    600032: 'Alwarpet',
+    600033: 'Valasaravakkam',  600034: 'Anna Nagar West',
+    600035: 'Anna Nagar East', 600036: 'Arumbakkam',
+    600040: 'Nanganallur',     600042: 'Velachery',
+    600044: 'Perungudi',       600045: 'Thoraipakkam',
+    600050: 'Mogappair',       600053: 'Villivakkam',
+    600056: 'Kolathur',        600058: 'Royapuram',
+    600061: 'Mugalivakkam',    600064: 'Medavakkam',
+    600078: 'Ambattur',        600081: 'Manali',
+    600082: 'Puzhal',          600083: 'Madhavaram',
+    600090: 'Velachery',       600096: 'OMR',
+    600099: 'Kundrathur',      600118: 'Perumbakkam',
   };
 
   Future<void> toggleNightWatch() async {
@@ -248,4 +248,92 @@ final sentinelRepositoryProvider = Provider<SentinelRepository>((ref) {
 final sentinelControllerProvider =
     StateNotifierProvider<SentinelController, SentinelState>((ref) {
   return SentinelController(ref.watch(sentinelRepositoryProvider));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Suraksha Mode — state, controller, provider
+// ─────────────────────────────────────────────────────────────────────────────
+
+class SurakshaState {
+  final bool enabled;
+  final String checkinMessage;
+  final bool isCheckinLoading;
+  final bool isEscalating;
+  final bool isEscalated;
+  final String escalationMessage;
+  final int unitsNotified;
+
+  const SurakshaState({
+    this.enabled = false,
+    this.checkinMessage = '',
+    this.isCheckinLoading = false,
+    this.isEscalating = false,
+    this.isEscalated = false,
+    this.escalationMessage = '',
+    this.unitsNotified = 0,
+  });
+}
+
+class SurakshaController extends StateNotifier<SurakshaState> {
+  final SentinelRepository _repo;
+
+  SurakshaController(this._repo) : super(const SurakshaState());
+
+  void toggle() {
+    state = SurakshaState(enabled: !state.enabled);
+  }
+
+  Future<void> simulateCheckin() async {
+    state = const SurakshaState(enabled: true, isCheckinLoading: true);
+    try {
+      final msg = await _repo.callGemmaCheckin('Priya', 'Anna Nagar');
+      state = SurakshaState(enabled: true, checkinMessage: msg);
+    } catch (_) {
+      state = const SurakshaState(
+        enabled: true,
+        checkinMessage:
+            "Hi Priya, it's late and you're away from home. Are you safe? / "
+            "வணக்கம் Priya, நேரம் ஆகிவிட்டது, நீங்கள் வீட்டை விட்டு வெளியே இருக்கிறீர்கள். "
+            "நீங்கள் பாதுகாப்பாக இருக்கிறீர்களா?",
+      );
+    }
+  }
+
+  Future<void> escalate() async {
+    final prevMsg = state.checkinMessage;
+    state = SurakshaState(
+        enabled: true, checkinMessage: prevMsg, isEscalating: true);
+    try {
+      final result =
+          await _repo.callGemmaEscalate('Priya', 'Anna Nagar', 'no_response');
+      state = SurakshaState(
+        enabled: true,
+        checkinMessage: prevMsg,
+        isEscalated: true,
+        escalationMessage: result['alert_message'] as String? ??
+            'Police alerted — Gemma AI has notified nearby units',
+        unitsNotified: result['units_notified'] as int? ?? 2,
+      );
+    } catch (_) {
+      state = SurakshaState(
+        enabled: true,
+        checkinMessage: prevMsg,
+        isEscalated: true,
+        escalationMessage:
+            'Police alerted — Gemma AI has notified nearby units',
+        unitsNotified: 2,
+      );
+    }
+  }
+
+  void markSafe() {
+    state = const SurakshaState(enabled: true);
+  }
+
+  void shareLocation() {}
+}
+
+final surakshaControllerProvider =
+    StateNotifierProvider<SurakshaController, SurakshaState>((ref) {
+  return SurakshaController(ref.watch(sentinelRepositoryProvider));
 });

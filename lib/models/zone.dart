@@ -21,7 +21,7 @@ class Zone {
     Zone(pincode: '600081', name: 'Manali',        riskLevel: 'HIGH',   lat: 13.1675, lng: 80.2617),
     Zone(pincode: '600002', name: 'Park Town',     riskLevel: 'MEDIUM', lat: 13.0827, lng: 80.2707),
     Zone(pincode: '600003', name: 'Triplicane',    riskLevel: 'MEDIUM', lat: 13.0569, lng: 80.2787),
-    Zone(pincode: '600011', name: 'Egmore',        riskLevel: 'MEDIUM', lat: 13.0732, lng: 80.2609),
+    Zone(pincode: '600011', name: 'Perambur',      riskLevel: 'MEDIUM', lat: 13.0732, lng: 80.2609),
     Zone(pincode: '600015', name: 'Mylapore',      riskLevel: 'LOW',    lat: 13.0339, lng: 80.2707),
     Zone(pincode: '600017', name: 'Adyar',         riskLevel: 'LOW',    lat: 13.0067, lng: 80.2570),
     Zone(pincode: '600032', name: 'T Nagar',       riskLevel: 'LOW',    lat: 13.0350, lng: 80.2323),
