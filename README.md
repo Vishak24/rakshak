@@ -314,6 +314,12 @@ See [SCREENSHOTS.md](SCREENSHOTS.md) for detailed SHAP visualizations and explan
 
 ---
 
+## Recognition
+
+Rakshak was recognized by the AWS Builder Center as a "working system, not a concept" — commended for real engineering discipline, novel spatio-temporal feature engineering, and complete citizen-to-police workflow design.
+
+---
+
 ## Contributors
 
 **Vishal Ganesan** - Full-stack development, ML integration, UI/UX design

@@ -18,7 +18,9 @@ def explain():
         f"You are a women's safety risk analyst for Chennai. "
         f"Zone pincode: {zone}. Risk score: {risk_score}/100. "
         f"In 2-3 sentences, explain why this zone has this risk level "
-        f"and what factors contribute to it."
+        f"and what factors contribute to it. "
+        f"Consider that false negatives — predicting safe when dangerous — are unacceptable "
+        f"in this safety-critical system. Err toward caution in your assessment."
     )
 
     resp = requests.post(OLLAMA_URL, json={
