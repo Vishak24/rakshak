@@ -67,6 +67,40 @@
   letter-spacing: 0.4px;
 }
 
+.scoreBlock {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.scoreNum {
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.unitLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.unitBadge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.3px;
+}
+
+.unitDist {
+  font-size: 9px;
+  color: var(--dim);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
 .card {
   background: var(--bg);
   border: 1px solid var(--border);
