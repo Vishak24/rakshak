@@ -587,13 +587,48 @@ class _SurakshaSection extends ConsumerWidget {
             ],
           ),
 
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
+
+          // "I'm staying out tonight" override
+          Row(
+            children: [
+              const Icon(Icons.nightlife_outlined,
+                  color: AppColors.textTertiary, size: 14),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: RkLabel.small("I'M STAYING OUT TONIGHT",
+                    color: AppColors.textSecondary),
+              ),
+              Transform.scale(
+                scale: 0.75,
+                alignment: Alignment.centerRight,
+                child: Switch(
+                  value: s.stayingOut,
+                  onChanged: (_) => ctrl.toggleStayingOut(),
+                  activeThumbColor: AppColors.riskMedium,
+                  activeTrackColor:
+                      AppColors.riskMedium.withValues(alpha: 0.30),
+                  inactiveThumbColor: AppColors.surfaceHigh,
+                  inactiveTrackColor: AppColors.surfaceContainer,
+                ),
+              ),
+            ],
+          ),
+
+          if (s.stayingOut)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: RkLabel.small('CHECK-INS SILENCED FOR TONIGHT',
+                  color: AppColors.riskMedium),
+            ),
+
+          const SizedBox(height: AppSpacing.xs),
 
           RkButton(
             label: 'SIMULATE 10 PM CHECK',
             icon: Icons.nightlight_round,
             isLoading: s.isCheckinLoading,
-            onPressed: s.isCheckinLoading ? null : ctrl.simulateCheckin,
+            onPressed: s.isCheckinLoading || s.stayingOut ? null : ctrl.simulateCheckin,
           ),
 
           if (s.checkinMessage.isNotEmpty) ...[

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import s from './GemmaPanel.module.css'
-import { ENDPOINTS } from '../../config/api'
+import { fetchGemmaInsight, fetchGemmaDispatch } from '../../services/gemma'
 
 export default function GemmaPanel({ selectedZone, patrolCount }) {
   const [explanation, setExplanation]         = useState('')
@@ -18,13 +18,8 @@ export default function GemmaPanel({ selectedZone, patrolCount }) {
     setRecommendation('')
     setLoadingExplain(true)
 
-    fetch(ENDPOINTS.gemmaExplain, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ zone: selectedZone.code, risk_score: selectedZone.riskScore }),
-    })
-      .then(r => r.json())
-      .then(d => setExplanation(d.explanation ?? ''))
+    fetchGemmaInsight(selectedZone.code, selectedZone.riskScore)
+      .then(text => setExplanation(text))
       .catch(() => setExplanation('Gemma service unavailable. Please try again.'))
       .finally(() => setLoadingExplain(false))
   }, [selectedZone])
@@ -34,18 +29,9 @@ export default function GemmaPanel({ selectedZone, patrolCount }) {
     setLoadingDispatch(true)
     setRecommendation('')
 
-    fetch(ENDPOINTS.gemmaDispatch, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        zone: selectedZone.code,
-        risk_score: selectedZone.riskScore,
-        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-        nearby_units: patrolCount,
-      }),
-    })
-      .then(r => r.json())
-      .then(d => setRecommendation(d.recommendation ?? ''))
+    const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+    fetchGemmaDispatch(selectedZone.code, selectedZone.riskScore, time, patrolCount)
+      .then(text => setRecommendation(text))
       .catch(() => setRecommendation('Gemma service unavailable. Please try again.'))
       .finally(() => setLoadingDispatch(false))
   }
@@ -57,7 +43,7 @@ export default function GemmaPanel({ selectedZone, patrolCount }) {
     <div className={s.panel}>
       <div className={s.hdr}>
         <div className={s.bar} />
-        <span className={s.title}>GEMMA AI ANALYSIS</span>
+        <span className={s.title}>🤖 Gemma AI Analysis</span>
         <span className={s.badge}>gemma3:4b</span>
       </div>
 
@@ -76,7 +62,10 @@ export default function GemmaPanel({ selectedZone, patrolCount }) {
 
           <div className={s.card}>
             {loadingExplain ? (
-              <div className={s.thinking}><span className={s.dot} />Gemma is thinking…</div>
+              <div className={s.thinking}>
+                <span className={s.spinner} />
+                Gemma is thinking…
+              </div>
             ) : (
               <p className={s.text}>{explanation}</p>
             )}
@@ -93,7 +82,10 @@ export default function GemmaPanel({ selectedZone, patrolCount }) {
           {(recommendation || loadingDispatch) && (
             <div className={s.card} style={{ marginTop: 6 }}>
               {loadingDispatch ? (
-                <div className={s.thinking}><span className={s.dot} />Gemma is thinking…</div>
+                <div className={s.thinking}>
+                  <span className={s.spinner} />
+                  Gemma is thinking…
+                </div>
               ) : (
                 <p className={s.text}>{recommendation}</p>
               )}

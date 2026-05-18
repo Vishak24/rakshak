@@ -15,18 +15,17 @@
 
 .bar {
   width: 3px;
-  height: 11px;
+  height: 14px;
   border-radius: 2px;
-  background: #a855f7;
+  background: var(--accent);
   flex-shrink: 0;
 }
 
 .title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
+  letter-spacing: 0.4px;
+  color: var(--text);
   flex: 1;
 }
 
@@ -35,9 +34,9 @@
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 4px;
-  background: rgba(168, 85, 247, 0.12);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  color: #a855f7;
+  background: rgba(0, 212, 180, 0.10);
+  border: 1px solid rgba(0, 212, 180, 0.28);
+  color: var(--accent);
   white-space: nowrap;
 }
 
@@ -90,29 +89,29 @@
   color: var(--dim);
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
+.spinner {
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #a855f7;
+  border: 2px solid rgba(0, 212, 180, 0.18);
+  border-top-color: var(--accent);
   display: inline-block;
   flex-shrink: 0;
-  animation: pulse 1.2s ease-in-out infinite;
+  animation: spin 0.75s linear infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.35; transform: scale(0.65); }
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .dispatchBtn {
   width: 100%;
   margin-top: 8px;
   padding: 7px 12px;
-  background: rgba(168, 85, 247, 0.1);
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: rgba(0, 212, 180, 0.08);
+  border: 1px solid rgba(0, 212, 180, 0.28);
   border-radius: 5px;
-  color: #a855f7;
+  color: var(--accent);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -122,7 +121,7 @@
 }
 
 .dispatchBtn:hover:not(:disabled) {
-  background: rgba(168, 85, 247, 0.2);
+  background: rgba(0, 212, 180, 0.16);
 }
 
 .dispatchBtn:disabled {

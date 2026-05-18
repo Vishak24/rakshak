@@ -26,8 +26,10 @@ export const ENDPOINTS = {
   reportsReject:  (id) => `${API_BASE}/reports/reject/${id}`,
 
   // Gemma local AI
-  gemmaExplain:  'http://localhost:5001/gemma/explain',
-  gemmaDispatch: 'http://localhost:5001/gemma/dispatch',
+  gemmaExplain:   'http://localhost:5001/gemma/explain',
+  gemmaDispatch:  'http://localhost:5001/gemma/dispatch',
+  gemmaCheckin:   'http://localhost:5001/gemma/checkin',
+  gemmaEscalate:  'http://localhost:5001/gemma/escalate',
 }
 
 export default ENDPOINTS

@@ -262,6 +262,7 @@ class SurakshaState {
   final bool isEscalated;
   final String escalationMessage;
   final int unitsNotified;
+  final bool stayingOut;
 
   const SurakshaState({
     this.enabled = false,
@@ -271,6 +272,7 @@ class SurakshaState {
     this.isEscalated = false,
     this.escalationMessage = '',
     this.unitsNotified = 0,
+    this.stayingOut = false,
   });
 }
 
@@ -280,17 +282,30 @@ class SurakshaController extends StateNotifier<SurakshaState> {
   SurakshaController(this._repo) : super(const SurakshaState());
 
   void toggle() {
-    state = SurakshaState(enabled: !state.enabled);
+    state = SurakshaState(enabled: !state.enabled, stayingOut: state.stayingOut);
+  }
+
+  void toggleStayingOut() {
+    state = SurakshaState(
+      enabled: state.enabled,
+      checkinMessage: state.checkinMessage,
+      isEscalated: state.isEscalated,
+      escalationMessage: state.escalationMessage,
+      unitsNotified: state.unitsNotified,
+      stayingOut: !state.stayingOut,
+    );
   }
 
   Future<void> simulateCheckin() async {
-    state = const SurakshaState(enabled: true, isCheckinLoading: true);
+    if (state.stayingOut) return;
+    state = SurakshaState(enabled: true, isCheckinLoading: true, stayingOut: state.stayingOut);
     try {
       final msg = await _repo.callGemmaCheckin('Priya', 'Anna Nagar');
-      state = SurakshaState(enabled: true, checkinMessage: msg);
+      state = SurakshaState(enabled: true, checkinMessage: msg, stayingOut: state.stayingOut);
     } catch (_) {
-      state = const SurakshaState(
+      state = SurakshaState(
         enabled: true,
+        stayingOut: state.stayingOut,
         checkinMessage:
             "Hi Priya, it's late and you're away from home. Are you safe? / "
             "வணக்கம் Priya, நேரம் ஆகிவிட்டது, நீங்கள் வீட்டை விட்டு வெளியே இருக்கிறீர்கள். "
@@ -301,8 +316,9 @@ class SurakshaController extends StateNotifier<SurakshaState> {
 
   Future<void> escalate() async {
     final prevMsg = state.checkinMessage;
+    final prevStayingOut = state.stayingOut;
     state = SurakshaState(
-        enabled: true, checkinMessage: prevMsg, isEscalating: true);
+        enabled: true, checkinMessage: prevMsg, isEscalating: true, stayingOut: prevStayingOut);
     try {
       final result =
           await _repo.callGemmaEscalate('Priya', 'Anna Nagar', 'no_response');
@@ -311,23 +327,24 @@ class SurakshaController extends StateNotifier<SurakshaState> {
         checkinMessage: prevMsg,
         isEscalated: true,
         escalationMessage: result['alert_message'] as String? ??
-            'Police alerted — Gemma AI has notified nearby units',
+            'Police alerted — Gemma AI notified 2 units',
         unitsNotified: result['units_notified'] as int? ?? 2,
+        stayingOut: prevStayingOut,
       );
     } catch (_) {
       state = SurakshaState(
         enabled: true,
         checkinMessage: prevMsg,
         isEscalated: true,
-        escalationMessage:
-            'Police alerted — Gemma AI has notified nearby units',
+        escalationMessage: 'Police alerted — Gemma AI notified 2 units',
         unitsNotified: 2,
+        stayingOut: prevStayingOut,
       );
     }
   }
 
   void markSafe() {
-    state = const SurakshaState(enabled: true);
+    state = SurakshaState(enabled: true, stayingOut: state.stayingOut);
   }
 
   void shareLocation() {}

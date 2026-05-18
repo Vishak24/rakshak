@@ -75,6 +75,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+*.env
 
 # Local Netlify folder
 .netlify
@@ -90,6 +91,10 @@ __pycache__/
 # Dashboard build artifacts
 rakshak-dashboard/dist/
 dashboard/dist/
+dist/
+
+# QA / audit scripts (internal tooling, not part of submission)
+rakshak-dashboard/rakshak_audit.cjs
 
 # Additional env files
 .env.production

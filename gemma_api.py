@@ -6,6 +6,11 @@ app = Flask(__name__)
 CORS(app)
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
+SAFETY_RULE = (
+    "This is a safety-critical system serving women in Chennai. "
+    "False negatives — predicting safe when dangerous — are unacceptable. "
+    "Err toward caution."
+)
 
 
 @app.route("/gemma/explain", methods=["POST"])
@@ -15,12 +20,11 @@ def explain():
     risk_score = data.get("risk_score", 0)
 
     prompt = (
+        f"{SAFETY_RULE} "
         f"You are a women's safety risk analyst for Chennai. "
         f"Zone pincode: {zone}. Risk score: {risk_score}/100. "
         f"In 2-3 sentences, explain why this zone has this risk level "
-        f"and what factors contribute to it. "
-        f"Consider that false negatives — predicting safe when dangerous — are unacceptable "
-        f"in this safety-critical system. Err toward caution in your assessment."
+        f"and what factors contribute to it."
     )
 
     resp = requests.post(OLLAMA_URL, json={
@@ -42,6 +46,7 @@ def dispatch():
     nearby_units = data.get("nearby_units", 0)
 
     prompt = (
+        f"{SAFETY_RULE} "
         f"You are a Chennai police dispatch commander. "
         f"Zone pincode: {zone}, risk score: {risk_score}/100, "
         f"current time: {time}, available patrol units: {nearby_units}. "
@@ -67,6 +72,7 @@ def checkin():
     time = data.get("time", "")
 
     prompt = (
+        f"{SAFETY_RULE} "
         f"You are Rakshak AI, a women's safety companion in Chennai. "
         f"Generate a warm, bilingual safety check-in message for {user_name} "
         f"who is currently in {zone} at {time}. "
@@ -97,6 +103,7 @@ def escalate():
     reason = data.get("reason", "no_response")
 
     prompt = (
+        f"{SAFETY_RULE} "
         f"You are Rakshak AI generating a police alert. "
         f"User {user} in {zone}, Chennai did not respond to a safety check-in. "
         f"Reason code: {reason}. "
