@@ -278,11 +278,47 @@ class SurakshaState {
 
 class SurakshaController extends StateNotifier<SurakshaState> {
   final SentinelRepository _repo;
+  Timer? _nightCheckTimer;
+
+  // Default home coordinates (Anna Nagar, Chennai — matches simulateCheckin zone)
+  static const double _homeLat = 13.0839;
+  static const double _homeLng = 80.2105;
+  // Auto-checkin fires when user is more than 500 m from home after 22:00
+  static const double _autoCheckinRadiusM = 500.0;
 
   SurakshaController(this._repo) : super(const SurakshaState());
 
   void toggle() {
-    state = SurakshaState(enabled: !state.enabled, stayingOut: state.stayingOut);
+    final nowEnabled = !state.enabled;
+    state = SurakshaState(enabled: nowEnabled, stayingOut: state.stayingOut);
+    if (nowEnabled) {
+      _startNightCheckDaemon();
+    } else {
+      _stopNightCheckDaemon();
+    }
+  }
+
+  void _startNightCheckDaemon() {
+    _nightCheckTimer?.cancel();
+    _nightCheckTimer = Timer.periodic(
+      const Duration(minutes: 5),
+      (_) => _nightCheckTick(),
+    );
+  }
+
+  void _stopNightCheckDaemon() {
+    _nightCheckTimer?.cancel();
+    _nightCheckTimer = null;
+  }
+
+  void _nightCheckTick() {
+    if (!state.enabled || state.stayingOut || state.isCheckinLoading) return;
+    if (DateTime.now().hour < 22) return;
+    final distanceM = Geolocator.distanceBetween(
+      _repo.latitude, _repo.longitude,
+      _homeLat, _homeLng,
+    );
+    if (distanceM > _autoCheckinRadiusM) simulateCheckin();
   }
 
   void toggleStayingOut() {
@@ -348,6 +384,12 @@ class SurakshaController extends StateNotifier<SurakshaState> {
   }
 
   void shareLocation() {}
+
+  @override
+  void dispose() {
+    _nightCheckTimer?.cancel();
+    super.dispose();
+  }
 }
 
 final surakshaControllerProvider =

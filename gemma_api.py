@@ -12,6 +12,20 @@ SAFETY_RULE = (
     "Err toward caution."
 )
 
+# Distress keywords — English and Tamil Unicode equivalents
+_DISTRESS_KEYWORDS = {
+    'help', 'emergency', 'danger', 'dangerous', 'unsafe', 'sos',
+    'scared', 'threat', 'attack', 'attacked', 'hurt', 'fear',
+    # Tamil
+    'உதவி', 'ஆபத்து', 'அவசரம்', 'பயமாக', 'பயம்', 'அச்சம்',
+    'தாக்கப்பட்டேன்',
+}
+
+
+def _classify_distress(text: str) -> bool:
+    lowered = text.lower()
+    return any(kw in lowered for kw in _DISTRESS_KEYWORDS)
+
 
 @app.route("/gemma/explain", methods=["POST"])
 def explain():
@@ -66,11 +80,44 @@ def dispatch():
 
 @app.route("/gemma/checkin", methods=["POST"])
 def checkin():
+    import datetime
     data = request.get_json()
     user_name = data.get("user_name", "User")
     zone = data.get("zone", "Chennai")
     time = data.get("time", "")
+    user_response = data.get("user_response", "")
 
+    # Distress classifier — if the user's reply contains danger keywords, escalate immediately
+    if user_response and _classify_distress(user_response):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{timestamp}] DISTRESS DETECTED — user={user_name}, zone={zone}, response='{user_response}'")
+
+        escalation_prompt = (
+            f"{SAFETY_RULE} "
+            f"You are Rakshak AI generating an emergency police alert. "
+            f"User {user_name} in zone {zone}, Chennai responded to a safety check-in "
+            f"with a distress message: '{user_response}'. "
+            f"Write a 1-2 sentence police dispatch alert confirming that 2 nearby patrol "
+            f"units are being dispatched immediately. Be direct and professional. "
+            f"Output only the alert message."
+        )
+        esc_resp = requests.post(OLLAMA_URL, json={
+            "model": "gemma3:4b",
+            "prompt": escalation_prompt,
+            "stream": False,
+        }, timeout=60)
+        esc_resp.raise_for_status()
+        alert_message = esc_resp.json().get("response", "")
+        print(f"[{timestamp}] Auto-escalation dispatched: {alert_message}")
+
+        return jsonify({
+            "message": f"Distress signal received from {user_name} — routing to emergency response.",
+            "escalated": True,
+            "alert_message": alert_message,
+            "units_notified": 2,
+        })
+
+    # Normal check-in flow
     prompt = (
         f"{SAFETY_RULE} "
         f"You are Rakshak AI, a women's safety companion in Chennai. "
@@ -90,7 +137,7 @@ def checkin():
     }, timeout=60)
     resp.raise_for_status()
 
-    return jsonify({"message": resp.json().get("response", "")})
+    return jsonify({"message": resp.json().get("response", ""), "escalated": False})
 
 
 @app.route("/gemma/escalate", methods=["POST"])
