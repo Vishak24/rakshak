@@ -90,7 +90,7 @@ Women in urban areas like Chennai face uncertainty about safety when traveling t
 - `latitude`, `longitude`, `pincode` - Location identifiers
 - `hour`, `is_night`, `is_evening`, `is_weekend`, `day_of_week` - Temporal features
 - `area_encoded`, `neighborhood_encoded` - Categorical encodings
-- `response_time_minutes`, `reporting_delay_minutes` - Historical police response data
+- `response_time_minutes`, `reporting_delay_minutes` - Police response and reporting-delay features
 - `signal_count_last_7d`, `signal_count_last_30d`, `signal_density_ratio` - Incident frequency
 
 ---
@@ -294,9 +294,9 @@ Rakshak uses SHAP (SHapley Additive exPlanations) to explain why the ML model pr
 **Example: Why is this location HIGH RISK at 11 PM?**
 
 Key factors contributing to HIGH RISK prediction:
-- `reporting_delay_minutes = 45` → **+0.13** (long delays in reporting crimes)
+- `reporting_delay_minutes = 45` → **+0.13**
 - `latitude = 13.083` → **+0.11**
-- `response_time_minutes = 18` → **+0.08** (slower police response)
+- `response_time_minutes = 18` → **+0.08**
 - `pincode = 600001` → **+0.09**
 - `is_night = 1` → **+0.02** (nighttime hour)
 
