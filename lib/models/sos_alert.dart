@@ -8,6 +8,7 @@ class SosAlert {
   final double? lng;
   final String? pincode;
   final String? sosId;
+  final String? userPhone; // set by POST /sos/cancelled
 
   const SosAlert({
     required this.id,
@@ -19,6 +20,7 @@ class SosAlert {
     this.lng,
     this.pincode,
     this.sosId,
+    this.userPhone,
   });
 
   factory SosAlert.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class SosAlert {
       lng:       (json['longitude'] as num?)?.toDouble(),
       pincode:   pincode,
       sosId:     json['sos_id']?.toString(),
+      userPhone: (json['user_phone']?.toString().isNotEmpty ?? false) ? json['user_phone'].toString() : null,
     );
   }
 
