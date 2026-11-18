@@ -7,7 +7,7 @@ apigw   = session.client('apigatewayv2', region_name='ap-south-1')
 lam     = session.client('lambda',       region_name='ap-south-1')
 
 API_ID     = 'aksdwfbnn5'
-ACCOUNT_ID = '468704514492'
+ACCOUNT_ID = '123456789012'
 REGION     = 'ap-south-1'
 
 ARNS = {

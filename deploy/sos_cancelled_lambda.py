@@ -169,7 +169,7 @@ def add_api_route():
             StatementId='apigw-sos-cancelled',
             Action='lambda:InvokeFunction',
             Principal='apigateway.amazonaws.com',
-            SourceArn=f'arn:aws:execute-api:{REGION}:468704514492:{API_ID}/*/*/sos/cancelled',
+            SourceArn=f'arn:aws:execute-api:{REGION}:123456789012:{API_ID}/*/*/sos/cancelled',
         )
         print('✅ Lambda invoke permission added')
     except ClientError as e:

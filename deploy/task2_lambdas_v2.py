@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 
 lambda_client = boto3.client('lambda', region_name='ap-south-1')
 
-ROLE_ARN = "arn:aws:iam::468704514492:role/rakshak-lambda-role"
+ROLE_ARN = "arn:aws:iam::123456789012:role/rakshak-lambda-role"
 
 # Pass through credentials so Lambdas can access new DynamoDB tables
 # Set RAKSHAK_AWS_ACCESS_KEY_ID and RAKSHAK_AWS_SECRET_ACCESS_KEY as environment variables before running

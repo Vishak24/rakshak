@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 
 lambda_client = boto3.client('lambda', region_name='ap-south-1')
 
-ROLE_ARN = "arn:aws:iam::468704514492:role/service-role/AmazonSageMaker-ExecutionRole-20260406T145594"
+ROLE_ARN = "arn:aws:iam::123456789012:role/service-role/AmazonSageMaker-ExecutionRole-20260406T145594"
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
