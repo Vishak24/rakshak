@@ -10,7 +10,7 @@ Rakshak is a production-ready Flutter application with:
 - **Mobile app** for end users (women in Chennai)
 - **Web dashboard** for police departments
 - **AWS Lambda backend** for ML inference
-- **XGBoost ML model** trained on Chennai crime data
+- **XGBoost ML model** served from AWS Lambda
 
 ---
 

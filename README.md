@@ -2,6 +2,8 @@
 
 **AI-powered women's safety platform for Chennai, India**
 
+> **Status:** hackathon project. The AWS backend it calls has been discontinued to avoid running costs, so risk scores and SOS dispatch will not work against a live server. The Flutter source, AWS deployment scripts (`deploy/`) and screenshots remain here for reference.
+
 Rakshak is a dual-interface Flutter application that provides real-time crime risk assessment using machine learning. Women in Chennai can check safety levels at any location, while police departments monitor high-risk zones and respond to incidents through a web dashboard.
 
 ---
@@ -10,7 +12,7 @@ Rakshak is a dual-interface Flutter application that provides real-time crime ri
 
 Women in urban areas like Chennai face uncertainty about safety when traveling to unfamiliar locations. Traditional crime data is reactive and not accessible in real-time. Rakshak solves this by:
 
-- Predicting crime risk (Low/Medium/High) for any location using ML trained on Chennai crime data
+- Predicting crime risk (Low/Medium/High) for any location using an ML model served from an AWS Lambda endpoint
 - Providing instant safety awareness through a mobile app
 - Enabling police to proactively monitor high-risk zones and respond faster to incidents
 
@@ -47,7 +49,7 @@ Women in urban areas like Chennai face uncertainty about safety when traveling t
 ### Backend & ML
 - **AWS Lambda** (Python 3.12) - Serverless ML inference
 - **API Gateway** (HTTP API) - REST endpoint
-- **ML Model** - XGBoost trained on Chennai crime data with SHAP explainability
+- **ML Model** - XGBoost classifier with SHAP explainability (training code and data are not part of this repository)
 
 ### Maps & Location
 - **Google Maps Flutter** - Interactive maps
@@ -201,14 +203,15 @@ POST https://aksdwfbnn5.execute-api.ap-south-1.amazonaws.com/predict
 
 ### ML Model Details
 - **Algorithm**: XGBoost Classifier
-- **Training Data**: Chennai crime records (2019-2024)
-- **Accuracy**: 89% on test set
+- **Training code, data and evaluation**: not included in this repository
 - **Explainability**: SHAP values for feature importance
 - **Deployment**: AWS Lambda with 512MB memory, 30s timeout
 
 ---
 
 ## Testing
+
+> The unit and integration tests under `test/` and `integration_test/` are out of date with the current app code and do not compile; the Playwright workflow fails for the same reason. The app itself builds (`flutter build web`).
 
 ### Unit Tests
 ```bash
@@ -292,13 +295,13 @@ Rakshak uses SHAP (SHapley Additive exPlanations) to explain why the ML model pr
 
 Key factors contributing to HIGH RISK prediction:
 - `reporting_delay_minutes = 45` → **+0.13** (long delays in reporting crimes)
-- `latitude = 13.083` → **+0.11** (historically high-crime area)
+- `latitude = 13.083` → **+0.11**
 - `response_time_minutes = 18` → **+0.08** (slower police response)
-- `pincode = 600001` → **+0.09** (high-crime postal code)
+- `pincode = 600001` → **+0.09**
 - `is_night = 1` → **+0.02** (nighttime hour)
 
 **Top Features by Importance:**
-1. **latitude** (0.35 mean SHAP value) - Geographic location is the strongest predictor
+1. **latitude** (0.35 mean SHAP value) - Geographic location is the strongest feature in the model
 2. **response_time_minutes** (0.20) - Faster response = safer area
 3. **pincode** (0.20) - Postal codes capture neighborhood-level patterns
 4. **reporting_delay_minutes** (0.18) - Longer delays indicate unsafe areas
@@ -325,9 +328,3 @@ Developed for educational and hackathon purposes.
 ---
 
 **Built with Flutter 💙 | Powered by AWS Lambda 🚀 | Trained with XGBoost 🤖**
-
-
-> ⚠️ Backend endpoints are currently paused to avoid 
-> cloud costs. The full architecture, source code, and 
-> demo screenshots are available in this repository.
-> Contact me to arrange a live demo.
