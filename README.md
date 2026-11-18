@@ -211,7 +211,7 @@ POST https://aksdwfbnn5.execute-api.ap-south-1.amazonaws.com/predict
 
 ## Testing
 
-> The unit and integration tests under `test/` and `integration_test/` are out of date with the current app code and do not compile; the Playwright workflow fails for the same reason. The app itself builds (`flutter build web`).
+> The unit and integration tests under `test/` and `integration_test/` are out of date with the current app code and do not compile. The Playwright CI workflow is also failing: its pinned Playwright version cannot install Chromium on GitHub's current Ubuntu runner. The app itself builds (`flutter build web`).
 
 ### Unit Tests
 ```bash
